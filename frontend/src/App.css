@@ -1,0 +1,4 @@
+/* App.css — component-level overrides */
+#root {
+  min-height: 100vh;
+}

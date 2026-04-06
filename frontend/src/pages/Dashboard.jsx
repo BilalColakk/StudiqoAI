@@ -1,0 +1,596 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import toast, { Toaster } from 'react-hot-toast';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  BookOpen, CalendarCheck, CheckCircle, Clock,
+  Zap, ArrowRight, RefreshCw, TrendingUp, Play, Pause, Square
+} from 'lucide-react';
+import Navbar from '../components/Navbar';
+import StatCard from '../components/StatCard';
+import ProgressRing from '../components/ProgressRing';
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import PageTransition from '../components/PageTransition';
+import {
+  getCourses, getExams, getLatestPlan,
+  getPlanProgress, generatePlan, regenerateAdaptive, completeEntry
+} from '../api/endpoints';
+
+const COLORS = ['#6C63FF','#00D2FF','#F59E0B','#22C55E','#EF4444','#EC4899','#8B5CF6','#14B8A6'];
+const ACTIVE_SESSION_KEY = 'activeStudySession';
+
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload?.length) {
+    return (
+      <div style={{
+        background: '#0D1117', border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: 10, padding: '8px 14px', fontSize: 13,
+      }}>
+        <span style={{ color: payload[0].payload.fill }}>{payload[0].name}: </span>
+        <strong style={{ color: '#F0F4FF' }}>{payload[0].value}h</strong>
+      </div>
+    );
+  }
+  return null;
+};
+
+function formatSeconds(totalSeconds) {
+  const safe = Math.max(0, totalSeconds);
+  const hours = Math.floor(safe / 3600);
+  const minutes = Math.floor((safe % 3600) / 60);
+  const seconds = safe % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function calculateRemainingSeconds(session) {
+  if (!session) return 0;
+
+  if (!session.isRunning) {
+    return Math.max(0, session.remainingSeconds ?? 0);
+  }
+
+  const elapsed = Math.floor((Date.now() - session.startedAt) / 1000);
+  return Math.max(0, session.durationSeconds - elapsed);
+}
+
+function persistSession(session) {
+  if (!session) {
+    localStorage.removeItem(ACTIVE_SESSION_KEY);
+    return;
+  }
+  localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(session));
+}
+
+async function ensureNotificationPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
+
+  const result = await Notification.requestPermission();
+  return result === 'granted';
+}
+
+function sendSessionFinishedNotification(courseName) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('Çalışma bloğu bitti', {
+      body: `${courseName} oturumu tamamlandı. İstersen mola ver.`,
+    });
+  }
+}
+
+export default function Dashboard() {
+  const navigate  = useNavigate();
+  const email     = localStorage.getItem('userEmail') || '';
+  const [courses,  setCourses]  = useState([]);
+  const [exams,    setExams]    = useState([]);
+  const [plan,     setPlan]     = useState(null);
+  const [progress, setProgress] = useState(null);
+  const [loading,  setLoading]  = useState(true);
+  const [genLoad,  setGenLoad]  = useState(false);
+  const [activeSession, setActiveSession] = useState(null);
+  const [sessionFinished, setSessionFinished] = useState(false);
+
+  useEffect(() => { loadAll(); }, []);
+
+  useEffect(() => {
+    const raw = localStorage.getItem(ACTIVE_SESSION_KEY);
+    if (!raw) return;
+
+    try {
+      const parsed = JSON.parse(raw);
+      const remaining = calculateRemainingSeconds(parsed);
+
+      if (remaining <= 0) {
+        localStorage.removeItem(ACTIVE_SESSION_KEY);
+        return;
+      }
+
+      if (parsed.isRunning) {
+        setActiveSession({ ...parsed, remainingSeconds: remaining });
+      } else {
+        setActiveSession(parsed);
+      }
+    } catch {
+      localStorage.removeItem(ACTIVE_SESSION_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!activeSession) return;
+    if (!activeSession.isRunning) return;
+
+    const interval = setInterval(() => {
+      setActiveSession(prev => {
+        if (!prev) return null;
+
+        const remaining = calculateRemainingSeconds(prev);
+
+        if (remaining <= 0) {
+          const finishedSession = {
+            ...prev,
+            remainingSeconds: 0,
+            isRunning: false,
+          };
+
+          persistSession(finishedSession);
+          setSessionFinished(true);
+          toast.success(`⏰ ${prev.courseName} oturumu bitti!`);
+          sendSessionFinishedNotification(prev.courseName);
+
+          return finishedSession;
+        }
+
+        const updated = { ...prev, remainingSeconds: remaining };
+        persistSession(updated);
+        return updated;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [activeSession?.isRunning]);
+
+  const loadAll = async () => {
+    setLoading(true);
+    try {
+      const [cRes, eRes, prRes] = await Promise.allSettled([
+        getCourses(), getExams(), getPlanProgress()
+      ]);
+      if (cRes.status === 'fulfilled') setCourses(cRes.value.data.courses || []);
+      if (eRes.status === 'fulfilled') setExams(eRes.value.data.exams  || []);
+      if (prRes.status === 'fulfilled') setProgress(prRes.value.data);
+
+      try {
+        const pRes = await getLatestPlan();
+        setPlan(pRes.data);
+      } catch {
+        setPlan(null);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerate = async (adaptive = false) => {
+    setGenLoad(true);
+    try {
+      const fn = adaptive ? regenerateAdaptive : generatePlan;
+      await fn({ preferred_block_hours: 2 });
+      toast.success(adaptive ? 'Adaptif plan oluşturuldu!' : 'Plan oluşturuldu!');
+      await loadAll();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Plan oluşturulamadı');
+    } finally {
+      setGenLoad(false);
+    }
+  };
+
+  const today = new Date().toISOString().split('T')[0];
+  const todayEntriesRaw = plan?.weekly_plan?.find(d => d.date === today)?.entries;
+  const todayEntries = Array.isArray(todayEntriesRaw) ? todayEntriesRaw : [];
+  const studyEntries = todayEntries.filter(e => e.type === 'study');
+
+  const courseHours = {};
+  (plan?.weekly_plan || []).forEach(day => {
+    const entries = Array.isArray(day.entries) ? day.entries : [];
+    entries.forEach(e => {
+      if (e.type === 'study' && e.course_name) {
+        courseHours[e.course_name] = (courseHours[e.course_name] || 0) + (e.study_hours || 0);
+      }
+    });
+  });
+
+  const chartData = Object.entries(courseHours).map(([name, hours], i) => ({
+    name,
+    value: parseFloat(hours.toFixed(1)),
+    fill: COLORS[i % COLORS.length],
+  }));
+
+  const upcomingExams = exams
+    .filter(e => e.exam_date && new Date(e.exam_date) >= new Date())
+    .sort((a, b) => new Date(a.exam_date) - new Date(b.exam_date))
+    .slice(0, 3);
+
+  const activeEntryId = activeSession?.entryId ?? null;
+
+  const activeEntry = useMemo(() => {
+    if (!activeEntryId) return null;
+    return studyEntries.find(e => e.id === activeEntryId) || null;
+  }, [studyEntries, activeEntryId]);
+
+  const startSession = async (entry) => {
+    if (!entry || entry.status !== 'pending') return;
+
+    if (activeSession && activeSession.entryId !== entry.id && activeSession.remainingSeconds > 0) {
+      toast.error('Aynı anda yalnızca bir oturum başlatabilirsin.');
+      return;
+    }
+
+    await ensureNotificationPermission();
+
+    const durationSeconds = (entry.duration_minutes || 0) * 60;
+
+    const session = {
+      entryId: entry.id,
+      courseName: entry.course_name,
+      durationSeconds,
+      remainingSeconds: durationSeconds,
+      startedAt: Date.now(),
+      isRunning: true,
+    };
+
+    setSessionFinished(false);
+    setActiveSession(session);
+    persistSession(session);
+    toast.success(`${entry.course_name} oturumu başladı`);
+  };
+
+  const pauseSession = () => {
+    setActiveSession(prev => {
+      if (!prev) return null;
+      const remaining = calculateRemainingSeconds(prev);
+      const paused = {
+        ...prev,
+        remainingSeconds: remaining,
+        isRunning: false,
+      };
+      persistSession(paused);
+      return paused;
+    });
+  };
+
+  const resumeSession = () => {
+    setActiveSession(prev => {
+      if (!prev) return null;
+      if (prev.remainingSeconds <= 0) return prev;
+
+      const resumed = {
+        ...prev,
+        durationSeconds: prev.remainingSeconds,
+        startedAt: Date.now(),
+        isRunning: true,
+      };
+      persistSession(resumed);
+      return resumed;
+    });
+  };
+
+  const stopSession = () => {
+    setActiveSession(null);
+    setSessionFinished(false);
+    persistSession(null);
+    toast('Oturum sıfırlandı');
+  };
+
+  const markSessionCompleted = async () => {
+    if (!activeSession?.entryId) return;
+
+    try {
+      await completeEntry(activeSession.entryId);
+      toast.success('Oturum tamamlandı olarak işaretlendi');
+      setActiveSession(null);
+      setSessionFinished(false);
+      persistSession(null);
+      await loadAll();
+    } catch {
+      toast.error('Oturum tamamlanamadı');
+    }
+  };
+
+  return (
+    <>
+      <Toaster position="top-right" toastOptions={{
+        style: { background: '#0D1117', color: '#F0F4FF', border: '1px solid rgba(255,255,255,0.08)' }
+      }} />
+
+      <div className="glow-orb" style={{ width: 500, height: 500, background: '#6C63FF', top: -200, right: -100, opacity: 0.06 }} />
+      <div className="glow-orb" style={{ width: 400, height: 400, background: '#00D2FF', bottom: 100, left: -100, opacity: 0.04 }} />
+
+      <div className="app-layout">
+        <Navbar />
+        <main className="main-content">
+          <PageTransition>
+            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+              <div>
+                <h1 className="page-title">Merhaba, {email.split('@')[0]} 👋</h1>
+                <p className="page-subtitle">İşte çalışma özetin — bugün harika bir gün!</p>
+              </div>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <motion.button
+                  className="btn btn-secondary btn-sm"
+                  whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                  onClick={() => handleGenerate(false)}
+                  disabled={genLoad}
+                >
+                  <Play size={14} /> Yeni Plan
+                </motion.button>
+                <motion.button
+                  className="btn btn-primary btn-sm"
+                  whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                  onClick={() => handleGenerate(true)}
+                  disabled={genLoad}
+                >
+                  {genLoad
+                    ? <RefreshCw size={14} style={{ animation: 'spin 0.7s linear infinite' }} />
+                    : <Zap size={14} />
+                  }
+                  Adaptif Plan
+                </motion.button>
+              </div>
+            </div>
+
+            {loading ? <LoadingSkeleton rows={4} height={100} /> : (
+              <>
+                <div className="grid-4" style={{ marginBottom: 28 }}>
+                  <StatCard icon={<BookOpen size={20} />} label="Toplam Ders" value={courses.length} color="#6C63FF" delay={0} sub="aktif dersler" />
+                  <StatCard icon={<CalendarCheck size={20} />} label="Yaklaşan Sınav" value={upcomingExams.length} color="#F59E0B" delay={0.08} sub="bu dönem" />
+                  <StatCard icon={<CheckCircle size={20} />} label="Tamamlanma" value={`${progress?.completion_rate_percent ?? 0}%`} color="#22C55E" delay={0.16} sub={`${progress?.completed_entries ?? 0} oturum`} />
+                  <StatCard icon={<Clock size={20} />} label="Günlük Saat" value={plan ? `${plan.daily_study_hours}s` : '—'} color="#00D2FF" delay={0.24} sub="çalışma hedefi" />
+                </div>
+
+                {activeSession && (
+                  <motion.div
+                    className="glass-card"
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{ marginBottom: 28 }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+                      <div>
+                        <div style={{ fontSize: 12, color: '#8892AA', marginBottom: 6 }}>
+                          Aktif Oturum
+                        </div>
+                        <div style={{ fontSize: 22, fontWeight: 800, color: '#F0F4FF', marginBottom: 6 }}>
+                          {activeSession.courseName}
+                        </div>
+                        <div style={{ fontSize: 34, fontWeight: 800, color: sessionFinished ? '#22C55E' : '#6C63FF', fontFamily: "'Space Grotesk', sans-serif" }}>
+                          {formatSeconds(activeSession.remainingSeconds)}
+                        </div>
+                        <div style={{ fontSize: 12, color: '#8892AA', marginTop: 6 }}>
+                          {sessionFinished ? 'Süre doldu' : activeSession.isRunning ? 'Sayaç çalışıyor' : 'Duraklatıldı'}
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                        {!sessionFinished && activeSession.isRunning && (
+                          <button className="btn btn-secondary btn-sm" onClick={pauseSession}>
+                            <Pause size={14} /> Duraklat
+                          </button>
+                        )}
+
+                        {!sessionFinished && !activeSession.isRunning && activeSession.remainingSeconds > 0 && (
+                          <button className="btn btn-primary btn-sm" onClick={resumeSession}>
+                            <Play size={14} /> Devam Et
+                          </button>
+                        )}
+
+                        {(sessionFinished || activeSession.remainingSeconds === 0) && (
+                          <button className="btn btn-success btn-sm" onClick={markSessionCompleted}>
+                            <CheckCircle size={14} /> Tamamla
+                          </button>
+                        )}
+
+                        <button className="btn btn-danger btn-sm" onClick={stopSession}>
+                          <Square size={14} /> Sıfırla
+                        </button>
+                      </div>
+                    </div>
+
+                    {activeEntry && (
+                      <div style={{ marginTop: 16, fontSize: 12, color: '#8892AA' }}>
+                        Planlanan saat: {activeEntry.start_time} – {activeEntry.end_time}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                <div className="grid-2" style={{ marginBottom: 28 }}>
+                  <motion.div className="glass-card"
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                      <h3 style={{ fontSize: 15, fontWeight: 700, color: '#F0F4FF' }}>📅 Bugünkü Program</h3>
+                      <button className="btn btn-sm btn-secondary" onClick={() => navigate('/study-plan')}>
+                        Tümü <ArrowRight size={12} />
+                      </button>
+                    </div>
+
+                    {studyEntries.length === 0 ? (
+                      <div className="empty-state" style={{ padding: '30px 0' }}>
+                        <div style={{ fontSize: 36 }}>☀️</div>
+                        <p style={{ color: '#8892AA', fontSize: 13 }}>
+                          {plan ? 'Bugün için çalışma yok' : 'Henüz plan oluşturulmadı'}
+                        </p>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {studyEntries.slice(0, 6).map((e, i) => {
+                          const isThisActive = activeSession?.entryId === e.id;
+                          const isPending = e.status === 'pending';
+
+                          return (
+                            <motion.div key={e.id}
+                              initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.35 + i * 0.07 }}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: 12,
+                                padding: '10px 14px', borderRadius: 10,
+                                background:
+                                  e.status === 'completed' ? 'rgba(34,197,94,0.08)' :
+                                  e.status === 'skipped' ? 'rgba(239,68,68,0.08)' :
+                                  isThisActive ? 'rgba(108,99,255,0.10)' :
+                                  'rgba(255,255,255,0.04)',
+                                border:
+                                  e.status === 'completed' ? '1px solid rgba(34,197,94,0.2)' :
+                                  e.status === 'skipped' ? '1px solid rgba(239,68,68,0.2)' :
+                                  isThisActive ? '1px solid rgba(108,99,255,0.25)' :
+                                  '1px solid rgba(255,255,255,0.06)',
+                              }}
+                            >
+                              <div style={{
+                                width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                                background: e.status === 'completed' ? '#22C55E' : e.status === 'skipped' ? '#EF4444' : '#6C63FF',
+                                boxShadow: `0 0 6px ${e.status === 'completed' ? '#22C55E' : e.status === 'skipped' ? '#EF4444' : '#6C63FF'}`,
+                              }} />
+
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F4FF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {e.course_name}
+                                </div>
+                                <div style={{ fontSize: 11, color: '#8892AA' }}>
+                                  {e.start_time} – {e.end_time}
+                                </div>
+                              </div>
+
+                              <span style={{ fontSize: 11, color: '#8892AA', flexShrink: 0 }}>
+                                {isThisActive ? formatSeconds(activeSession.remainingSeconds) : `${e.duration_minutes}dk`}
+                              </span>
+
+                              {isPending && !isThisActive && (
+                                <button
+                                  className="btn btn-primary btn-sm"
+                                  onClick={() => startSession(e)}
+                                  disabled={!!activeSession && activeSession.entryId !== e.id && activeSession.remainingSeconds > 0}
+                                >
+                                  <Play size={12} /> Başla
+                                </button>
+                              )}
+
+                              {isThisActive && (
+                                <span
+                                  style={{
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                    color: '#6C63FF',
+                                    background: 'rgba(108,99,255,0.12)',
+                                    border: '1px solid rgba(108,99,255,0.25)',
+                                    borderRadius: 20,
+                                    padding: '4px 10px',
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  Aktif
+                                </span>
+                              )}
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </motion.div>
+
+                  <motion.div className="glass-card"
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.35 }}
+                  >
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: '#F0F4FF', marginBottom: 20 }}>📊 Genel İlerleme</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 24 }}>
+                      <ProgressRing percent={progress?.completion_rate_percent ?? 0} />
+                      <div>
+                        <div style={{ fontSize: 13, color: '#8892AA', marginBottom: 12 }}>Bu haftanın istatistikleri</div>
+                        {[
+                          { label: 'Tamamlandı', val: progress?.completed_entries ?? 0, color: '#22C55E' },
+                          { label: 'Atlandı', val: progress?.skipped_entries ?? 0, color: '#EF4444' },
+                          { label: 'Bekliyor', val: progress?.pending_entries ?? 0, color: '#6C63FF' },
+                        ].map(s => (
+                          <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, boxShadow: `0 0 6px ${s.color}` }} />
+                            <span style={{ fontSize: 12, color: '#8892AA' }}>{s.label}</span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: '#F0F4FF', marginLeft: 'auto' }}>{s.val}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {chartData.length > 0 && (
+                      <>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F4FF', marginBottom: 12 }}>
+                          <TrendingUp size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
+                          Ders Bazlı Çalışma (saat)
+                        </div>
+                        <ResponsiveContainer width="100%" height={160}>
+                          <PieChart>
+                            <Pie data={chartData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={4} dataKey="value">
+                              {chartData.map((item, i) => (
+                                <Cell key={i} fill={item.fill} />
+                              ))}
+                            </Pie>
+                            <Tooltip content={<CustomTooltip />} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </>
+                    )}
+                  </motion.div>
+                </div>
+
+                {upcomingExams.length > 0 && (
+                  <motion.div className="glass-card"
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.45 }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                      <h3 style={{ fontSize: 15, fontWeight: 700, color: '#F0F4FF' }}>🎯 Yaklaşan Sınavlar</h3>
+                      <button className="btn btn-sm btn-secondary" onClick={() => navigate('/exams')}>
+                        Tümünü gör <ArrowRight size={12} />
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+                      {upcomingExams.map((ex, i) => {
+                        const days = Math.ceil((new Date(ex.exam_date) - new Date()) / 86400000);
+                        const typeColor = { quiz: '#3B82F6', midterm: '#F59E0B', final: '#EF4444', other: '#8892AA' };
+                        return (
+                          <motion.div key={ex.exam_id}
+                            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.5 + i * 0.08 }}
+                            style={{
+                              flex: 1, minWidth: 140,
+                              padding: '14px 18px', borderRadius: 12,
+                              background: 'rgba(255,255,255,0.04)',
+                              border: '1px solid rgba(255,255,255,0.08)',
+                            }}
+                          >
+                            <div style={{ fontSize: 11, color: typeColor[ex.exam_type] || '#8892AA', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                              {ex.exam_type}
+                            </div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: '#F0F4FF', marginBottom: 4 }}>
+                              {ex.course_name}
+                            </div>
+                            <div style={{ fontSize: 12, color: days <= 3 ? '#EF4444' : days <= 7 ? '#F59E0B' : '#8892AA', fontWeight: 600 }}>
+                              {days === 0 ? 'Bugün!' : days === 1 ? 'Yarın!' : `${days} gün kaldı`}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </>
+            )}
+          </PageTransition>
+        </main>
+      </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </>
+  );
+}
