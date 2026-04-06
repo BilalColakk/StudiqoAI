@@ -1,4 +1,4 @@
-import bcryot
+import bcrypt
 
 def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()
