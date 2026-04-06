@@ -5,7 +5,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import {
   BookOpen, CalendarCheck, CheckCircle, Clock,
-  Zap, ArrowRight, RefreshCw, TrendingUp, Play, Pause, Square
+  Zap, ArrowRight, RefreshCw, TrendingUp, Play, Pause, Square, SkipForward
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import StatCard from '../components/StatCard';
@@ -14,7 +14,7 @@ import LoadingSkeleton from '../components/LoadingSkeleton';
 import PageTransition from '../components/PageTransition';
 import {
   getCourses, getExams, getLatestPlan,
-  getPlanProgress, generatePlan, regenerateAdaptive, completeEntry
+  getPlanProgress, generatePlan, regenerateAdaptive, completeEntry, skipEntry
 } from '../api/endpoints';
 
 const COLORS = ['#6C63FF','#00D2FF','#F59E0B','#22C55E','#EF4444','#EC4899','#8B5CF6','#14B8A6'];
@@ -297,6 +297,26 @@ export default function Dashboard() {
     }
   };
 
+  const handleDirectComplete = async (id) => {
+    try {
+      await completeEntry(id);
+      toast.success('Görev tamamlandı');
+      await loadAll();
+    } catch {
+      toast.error('İşlem başarısız');
+    }
+  };
+
+  const handleDirectSkip = async (id) => {
+    try {
+      await skipEntry(id);
+      toast('Görev atlandı', { icon: '⏭️' });
+      await loadAll();
+    } catch {
+      toast.error('İşlem başarısız');
+    }
+  };
+
   return (
     <>
       <Toaster position="top-right" toastOptions={{
@@ -468,13 +488,34 @@ export default function Dashboard() {
                               </span>
 
                               {isPending && !isThisActive && (
-                                <button
-                                  className="btn btn-primary btn-sm"
-                                  onClick={() => startSession(e)}
-                                  disabled={!!activeSession && activeSession.entryId !== e.id && activeSession.remainingSeconds > 0}
-                                >
-                                  <Play size={12} /> Başla
-                                </button>
+                                <div style={{ display: 'flex', gap: 6 }}>
+                                  <button
+                                    className="btn btn-primary btn-sm"
+                                    onClick={() => startSession(e)}
+                                    disabled={!!activeSession && activeSession.entryId !== e.id && activeSession.remainingSeconds > 0}
+                                    title="Sayacı Başlat"
+                                  >
+                                    <Play size={12} /> Başla
+                                  </button>
+                                  <button
+                                    className="btn btn-success btn-sm"
+                                    style={{ padding: '0 8px' }}
+                                    onClick={() => handleDirectComplete(e.id)}
+                                    disabled={!!activeSession && activeSession.entryId !== e.id && activeSession.remainingSeconds > 0}
+                                    title="Sayacı başlatmadan tamamla"
+                                  >
+                                    <CheckCircle size={12} />
+                                  </button>
+                                  <button
+                                    className="btn btn-danger btn-sm"
+                                    style={{ padding: '0 8px' }}
+                                    onClick={() => handleDirectSkip(e.id)}
+                                    disabled={!!activeSession && activeSession.entryId !== e.id && activeSession.remainingSeconds > 0}
+                                    title="Bu görevi atla"
+                                  >
+                                    <SkipForward size={12} />
+                                  </button>
+                                </div>
                               )}
 
                               {isThisActive && (
