@@ -94,7 +94,7 @@ export default function FocusOverlay({
         <style>{`
           .focus-btn {
             width: 80px; height: 80px; border-radius: 50%;
-            display: flex; alignItems: center; justifyContent: center;
+            display: flex; align-items: center; justify-content: center;
             border: none; cursor: pointer; transition: all 0.2s;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
           }
