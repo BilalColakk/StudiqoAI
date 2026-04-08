@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
+import json
 from typing import Optional, List
 from datetime import date
 
@@ -27,6 +28,16 @@ class UserResponse(BaseModel):
     is_verified: bool
     streak_count: int
     badges: List[str] = []
+    
+    @field_validator('badges', mode='before')
+    @classmethod
+    def parse_badges(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except:
+                return []
+        return v
 
     class Config:
         from_attributes = True

@@ -34,13 +34,13 @@ export default function Login() {
   return (
     <>
       <Toaster position="top-right" toastOptions={{
-        style: { background: '#0D1117', color: '#F0F4FF', border: '1px solid rgba(255,255,255,0.08)' }
+        style: { background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
       }} />
 
       <div className="auth-layout">
         <div className="auth-left">
-          <div className="auth-blob" style={{ width: 400, height: 400, background: '#fff', top: '-100px', left: '-100px' }} />
-          <div className="auth-blob" style={{ width: 300, height: 300, background: '#00D2FF', bottom: '-50px', right: '-50px', animationDelay: '3s' }} />
+          <div className="auth-blob" style={{ width: 400, height: 400, background: 'var(--accent-1)', top: '-100px', left: '-100px', opacity: 0.15 }} />
+          <div className="auth-blob" style={{ width: 300, height: 300, background: 'var(--accent-2)', bottom: '-50px', right: '-50px', animationDelay: '3s', opacity: 0.15 }} />
 
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -94,10 +94,10 @@ export default function Login() {
             transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
           >
             <div style={{ marginBottom: 36 }}>
-              <h2 style={{ fontSize: 28, fontWeight: 800, color: '#F0F4FF', marginBottom: 8 }}>
+              <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
                 Tekrar hoş geldin 👋
               </h2>
-              <p style={{ color: '#8892AA', fontSize: 14 }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
                 Hesabına giriş yaparak planlarına ulaş
               </p>
             </div>
@@ -126,7 +126,7 @@ export default function Login() {
               <div className="input-group">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                   <label className="input-label" style={{ marginBottom: 0 }}>Şifre</label>
-                  <Link to="/forgot-password" style={{ fontSize: 12, color: '#00D2FF', textDecoration: 'none' }}>
+                  <Link to="/forgot-password" style={{ fontSize: 12, color: 'var(--accent-1)', textDecoration: 'none' }}>
                     Şifremi unuttum
                   </Link>
                 </div>
@@ -168,9 +168,9 @@ export default function Login() {
 
             <div className="divider-text" style={{ marginTop: 28 }}>veya</div>
 
-            <p style={{ textAlign: 'center', color: '#8892AA', fontSize: 14 }}>
+            <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: 14 }}>
               Hesabın yok mu?{' '}
-              <Link to="/register" style={{ color: '#6C63FF', fontWeight: 600, textDecoration: 'none' }}>
+              <Link to="/register" style={{ color: 'var(--accent-1)', fontWeight: 600, textDecoration: 'none' }}>
                 Kayıt ol
               </Link>
             </p>

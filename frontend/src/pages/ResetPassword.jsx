@@ -37,7 +37,7 @@ export default function ResetPassword() {
   return (
     <>
       <Toaster position="top-right" toastOptions={{
-        style: { background: '#0D1117', color: '#F0F4FF', border: '1px solid rgba(255,255,255,0.08)' }
+        style: { background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
       }} />
 
       <div className="auth-layout" style={{ justifyContent: 'center', alignItems: 'center' }}>
@@ -49,10 +49,10 @@ export default function ResetPassword() {
           style={{ width: '100%', maxWidth: 450, margin: '0 auto' }}
         >
           <div style={{ marginBottom: 32, textAlign: 'center' }}>
-            <h2 style={{ fontSize: 24, fontWeight: 800, color: '#F0F4FF', marginBottom: 8 }}>
+            <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
               Yeni Şifre Belirle 🗝️
             </h2>
-            <p style={{ color: '#8892AA', fontSize: 14 }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
               Lütfen hesabınız için yeni bir şifre girin.
             </p>
           </div>

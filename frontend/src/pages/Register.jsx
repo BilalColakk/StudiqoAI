@@ -65,7 +65,7 @@ export default function Register() {
   return (
     <>
       <Toaster position="top-right" toastOptions={{
-        style: { background: '#0D1117', color: '#F0F4FF', border: '1px solid rgba(255,255,255,0.08)' }
+        style: { background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
       }} />
 
       <div className="auth-layout">
@@ -106,10 +106,10 @@ export default function Register() {
             style={{ maxHeight: '90vh', overflowY: 'auto' }}
           >
             <div style={{ marginBottom: 24 }}>
-              <h2 style={{ fontSize: 28, fontWeight: 800, color: '#F0F4FF', marginBottom: 8 }}>
+              <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
                 Hesap oluştur ✨
               </h2>
-              <p style={{ color: '#8892AA', fontSize: 14 }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
                 Dakikalar içinde başlamaya hazır ol
               </p>
             </div>
@@ -170,7 +170,7 @@ export default function Register() {
                       {[1,2,3].map(l => (
                         <div key={l} style={{
                           flex: 1, height: 4, borderRadius: 4,
-                          background: strength >= l ? strengthColors[strength - 1] : 'rgba(255,255,255,0.08)',
+                          background: strength >= l ? strengthColors[strength - 1] : 'var(--bg-card)',
                           transition: 'all 0.3s',
                         }} />
                       ))}
@@ -190,7 +190,7 @@ export default function Register() {
                     value={form.confirm} onChange={e => setForm(p => ({ ...p, confirm: e.target.value }))} required />
                 </div>
                 {form.confirm && form.password !== form.confirm && (
-                  <span style={{ fontSize: 12, color: '#EF4444', marginTop: 4 }}>Şifreler eşleşmiyor</span>
+                  <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4 }}>Şifreler eşleşmiyor</span>
                 )}
               </div>
 
@@ -211,7 +211,7 @@ export default function Register() {
 
             <div className="divider-text" style={{ marginTop: 24 }}>Zaten hesabın var mı?</div>
             <p style={{ textAlign: 'center' }}>
-              <Link to="/login" style={{ color: '#6C63FF', fontWeight: 600, textDecoration: 'none', fontSize: 14 }}>
+              <Link to="/login" style={{ color: 'var(--accent-1)', fontWeight: 600, textDecoration: 'none', fontSize: 14 }}>
                 Giriş yap →
               </Link>
             </p>

@@ -26,11 +26,11 @@ const CustomTooltip = ({ active, payload }) => {
   if (active && payload?.length) {
     return (
       <div style={{
-        background: '#0D1117', border: '1px solid rgba(255,255,255,0.1)',
+        background: 'var(--bg-surface)', border: '1px solid var(--border)',
         borderRadius: 10, padding: '8px 14px', fontSize: 13,
       }}>
         <span style={{ color: payload[0].payload.fill }}>{payload[0].name}: </span>
-        <strong style={{ color: '#F0F4FF' }}>{payload[0].value}h</strong>
+        <strong style={{ color: 'var(--text-primary)' }}>{payload[0].value}h</strong>
       </div>
     );
   }

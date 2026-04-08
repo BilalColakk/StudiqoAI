@@ -28,7 +28,7 @@ export default function ForgotPassword() {
   return (
     <>
       <Toaster position="top-right" toastOptions={{
-        style: { background: '#0D1117', color: '#F0F4FF', border: '1px solid rgba(255,255,255,0.08)' }
+        style: { background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
       }} />
 
       <div className="auth-layout" style={{ justifyContent: 'center', alignItems: 'center' }}>
@@ -40,10 +40,10 @@ export default function ForgotPassword() {
           style={{ width: '100%', maxWidth: 450, margin: '0 auto' }}
         >
           <div style={{ marginBottom: 32, textAlign: 'center' }}>
-            <h2 style={{ fontSize: 24, fontWeight: 800, color: '#F0F4FF', marginBottom: 8 }}>
+            <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
               Şifremi Unuttum 🔒
             </h2>
-            <p style={{ color: '#8892AA', fontSize: 14 }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
               Kayıtlı e-posta adresini gir, sana sıfırlama linki gönderelim.
             </p>
           </div>
@@ -89,15 +89,15 @@ export default function ForgotPassword() {
               <div style={{ width: 64, height: 64, background: 'rgba(34, 197, 94, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                 <Mail size={32} color="#22C55E" />
               </div>
-              <h3 style={{ color: '#fff', marginBottom: 12 }}>E-Posta Gönderildi</h3>
-              <p style={{ color: '#8892AA', fontSize: 14, marginBottom: 24 }}>
+              <h3 style={{ color: 'var(--text-primary)', marginBottom: 12 }}>E-Posta Gönderildi</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 24 }}>
                 <strong>{email}</strong> adresine şifre sıfırlama talimatlarını içeren bir mail gönderdik (Terminalde).
               </p>
             </div>
           )}
 
           <div style={{ marginTop: 24, textAlign: 'center' }}>
-            <Link to="/login" style={{ color: '#8892AA', fontSize: 14, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <Link to="/login" style={{ color: 'var(--text-secondary)', fontSize: 14, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <ArrowLeft size={14} /> Giriş sayfasına dön
             </Link>
           </div>
