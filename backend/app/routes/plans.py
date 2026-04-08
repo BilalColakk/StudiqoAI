@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone, date
 
-from .. import models
-from ..schemas import PlanRequest
+from .. import models, schemas
+from ..schemas import PlanRequest, EntryCompleteRequest
 from ..services.dependencies import get_db, get_current_user
 from ..services.planner import (
     calculate_priority,
@@ -347,7 +347,7 @@ def get_latest_plan(
 @router.patch("/entries/{entry_id}/complete")
 def complete_plan_entry(
     entry_id: int,
-    request: schemas.EntryCompleteRequest,
+    request: EntryCompleteRequest,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
