@@ -22,6 +22,7 @@ export default function Navbar() {
   const navigate  = useNavigate();
   const location  = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const { isDarkMode, toggleTheme } = useTheme();
   
   const email     = localStorage.getItem('userEmail') || 'Kullanıcı';
   const initials  = email.slice(0, 2).toUpperCase();
@@ -53,9 +54,22 @@ export default function Navbar() {
             Study Planner
           </div>
         </div>
-        {/* Mobile Close Button */}
         <button className="mobile-only" onClick={() => setIsOpen(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#8892AA' }}>
           <X size={24} />
+        </button>
+        {/* Desktop Theme Toggle */}
+        <button 
+          className="desktop-only" 
+          onClick={toggleTheme}
+          style={{ 
+            marginLeft: 'auto', background: 'rgba(255,255,255,0.05)', 
+            border: '1px solid rgba(255,255,255,0.1)', 
+            color: '#F0F4FF', width: 32, height: 32, 
+            borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer'
+          }}
+        >
+          {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
         </button>
       </div>
 
@@ -217,9 +231,11 @@ export default function Navbar() {
           .desktop-sidebar { display: none !important; }
           .mobile-header { display: flex !important; }
           .mobile-only { display: block !important; }
+          .desktop-only { display: none !important; }
         }
         @media (min-width: 769px) {
           .mobile-only { display: none !important; }
+          .desktop-only { display: flex !important; }
         }
       `}</style>
     </>
