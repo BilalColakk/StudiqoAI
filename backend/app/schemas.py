@@ -26,7 +26,7 @@ class UserResponse(BaseModel):
     email: EmailStr
     is_verified: bool
     streak_count: int
-    badges: Optional[str] = "[]"
+    badges: List[str] = []
 
     class Config:
         from_attributes = True
