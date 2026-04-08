@@ -64,10 +64,11 @@ export default function Profile() {
       }
 
       const res = await updateMe(payload);
-      setUser(res.data);
+      const updatedUser = res.data;
+      setUser(updatedUser);
       setPasswords({ new_password: '', confirm_password: '' });
       toast.success('Profil başarıyla güncellendi!');
-      localStorage.setItem('userEmail', user.email);
+      localStorage.setItem('userEmail', updatedUser.email);
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Güncelleme başarısız oldu.');
     } finally {
@@ -127,10 +128,11 @@ export default function Profile() {
                 <Award size={14} /> Kazanılan Rozetler
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {JSON.parse(user.badges || "[]").length === 0 ? (
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Henüz rozet kazanılmadı</span>
-                ) : (
-                  JSON.parse(user.badges || "[]").map(bId => {
+                {(() => {
+                  const badgeList = Array.isArray(user.badges) ? user.badges : JSON.parse(user.badges || "[]");
+                  if (badgeList.length === 0) return <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Henüz rozet kazanılmadı</span>;
+                  
+                  return badgeList.map(bId => {
                     const badge = allBadges.find(a => a.id === bId);
                     return (
                       <div key={bId} title={badge?.desc} style={{
@@ -140,8 +142,8 @@ export default function Profile() {
                         🏆 {badge?.name || bId}
                       </div>
                     )
-                  })
-                )}
+                  });
+                })()}
               </div>
             </div>
           </div>
