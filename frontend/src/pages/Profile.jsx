@@ -90,7 +90,9 @@ export default function Profile() {
   return (
     <div className="layout-root">
       <Navbar />
-      <Toaster position="top-right" />
+      <Toaster position="top-right" toastOptions={{
+        style: { background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
+      }} />
       
       <main className="main-content">
         <div className="page-header" style={{ marginBottom: 32 }}>
@@ -99,7 +101,7 @@ export default function Profile() {
             animate={{ opacity: 1, y: 0 }}
           >
             <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Hesabım 👤</h1>
-            <p className="text-gray-400">Kişisel bilgilerinizi ve hesap ayarlarınızı buradan yönetebilirsiniz.</p>
+            <p style={{ color: 'var(--text-secondary)' }}>Kişisel bilgilerinizi ve hesap ayarlarınızı buradan yönetebilirsiniz.</p>
           </motion.div>
         </div>
 
@@ -154,7 +156,7 @@ export default function Profile() {
               {/* Personal Info Section */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 <h3 style={{ color: 'var(--text-primary)', fontSize: 18, borderBottom: '1px solid var(--border)', paddingBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <User size={18} color="#6C63FF" /> Kişisel Bilgiler
+                  <User size={18} color="var(--accent-1)" /> Kişisel Bilgiler
                 </h3>
                 
                 <div style={{ display: 'flex', gap: 16 }}>
@@ -197,9 +199,9 @@ export default function Profile() {
               {/* Password Section */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 <h3 style={{ color: 'var(--text-primary)', fontSize: 18, borderBottom: '1px solid var(--border)', paddingBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Lock size={18} color="#6C63FF" /> Şifre Değiştir
+                  <Lock size={18} color="var(--accent-1)" /> Şifre Değiştir
                 </h3>
-                <p style={{ fontSize: 12, color: '#8892AA' }}>Şifrenizi değiştirmek istemiyorsanız bu alanları boş bırakabilirsiniz.</p>
+                <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Şifrenizi değiştirmek istemiyorsanız bu alanları boş bırakabilirsiniz.</p>
 
                 <div className="input-group">
                   <label className="input-label">Yeni Şifre</label>

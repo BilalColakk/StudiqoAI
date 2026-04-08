@@ -40,11 +40,11 @@ function EntryBlock({ entry, onComplete, onSkip }) {
         padding: '12px 14px', borderRadius: 12,
         background: statusCompleted ? 'rgba(34,197,94,0.08)' :
                     statusSkipped   ? 'rgba(239,68,68,0.06)' :
-                    isStudy         ? `${color}0F` : 'rgba(255,255,255,0.03)',
+                    isStudy         ? `${color}0F` : 'var(--bg-card)',
         border: `1px solid ${
           statusCompleted ? 'rgba(34,197,94,0.2)' :
           statusSkipped   ? 'rgba(239,68,68,0.15)' :
-          isStudy         ? `${color}30` : 'rgba(255,255,255,0.06)'
+          isStudy         ? `${color}30` : 'var(--border)'
         }`,
         opacity: statusSkipped ? 0.6 : 1,
         transition: 'all 0.3s',
@@ -61,7 +61,7 @@ function EntryBlock({ entry, onComplete, onSkip }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
           {isStudy ? <BookOpen size={12} style={{ color }} /> : <Coffee size={12} color="#4A5568" />}
           <span style={{
-            fontSize: 13, fontWeight: 700, color: '#F0F4FF',
+            fontSize: 13, fontWeight: 700, color: 'var(--text-primary)',
             textDecoration: statusSkipped ? 'line-through' : 'none',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
           }}>
@@ -70,7 +70,7 @@ function EntryBlock({ entry, onComplete, onSkip }) {
           {statusCompleted && <CheckCircle size={12} color="#22C55E" />}
           {statusSkipped   && <XCircle    size={12} color="#EF4444" />}
         </div>
-        <div style={{ fontSize: 11, color: '#8892AA', display: 'flex', gap: 10 }}>
+        <div style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'flex', gap: 10 }}>
           <span><Clock size={10} style={{ verticalAlign: 'middle' }} /> {entry.start_time}–{entry.end_time}</span>
           <span>{entry.duration_minutes}dk</span>
           {isStudy && entry.exam_type && (
@@ -139,13 +139,13 @@ function DayColumn({ dayData, onComplete, onSkip }) {
             </span>
           )}
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#F0F4FF', textTransform: 'capitalize' }}>{label}</div>
-            <div style={{ fontSize: 11, color: '#8892AA' }}>{numLabel}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'capitalize' }}>{label}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{numLabel}</div>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 12, color: '#8892AA' }}>{doneCount}/{studyCount}</span>
-          {expanded ? <ChevronUp size={14} color="#8892AA" /> : <ChevronDown size={14} color="#8892AA" />}
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{doneCount}/{studyCount}</span>
+          {expanded ? <ChevronUp size={14} color="var(--text-secondary)" /> : <ChevronDown size={14} color="var(--text-secondary)" />}
         </div>
       </div>
 
@@ -245,7 +245,7 @@ export default function StudyPlan() {
   return (
     <>
       <Toaster position="top-right" toastOptions={{
-        style: { background: '#0D1117', color: '#F0F4FF', border: '1px solid rgba(255,255,255,0.08)' }
+        style: { background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
       }} />
       <div className="glow-orb" style={{ width: 500, height: 500, background: '#6C63FF', top: -200, left: -100, opacity: 0.05 }} />
 
@@ -269,7 +269,7 @@ export default function StudyPlan() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
                   <ProgressRing percent={pct} size={80} stroke={7} />
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#F0F4FF', marginBottom: 6 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>
                       <BarChart2 size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} />
                       Tamamlanma Oranı
                     </div>
@@ -286,8 +286,8 @@ export default function StudyPlan() {
                 {/* Block hours + buttons */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'center' }}>
                   <div>
-                    <div style={{ fontSize: 12, color: '#8892AA', marginBottom: 6 }}>
-                      Blok Süresi: <strong style={{ color: '#F0F4FF' }}>{blockH} saat</strong>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                      Blok Süresi: <strong style={{ color: 'var(--text-primary)' }}>{blockH} saat</strong>
                     </div>
                     <input type="range" className="slider" min={1} max={4}
                       value={blockH} onChange={e => setBlockH(Number(e.target.value))}
@@ -348,8 +348,8 @@ export default function StudyPlan() {
               !plan ? (
                 <div className="empty-state">
                   <div className="empty-icon">📋</div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#F0F4FF' }}>Henüz plan oluşturulmadı</h3>
-                  <p style={{ color: '#8892AA', fontSize: 14, maxWidth: 320, textAlign: 'center' }}>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>Henüz plan oluşturulmadı</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 14, maxWidth: 320, textAlign: 'center' }}>
                     Derslerini ve müsaitliğini ayarla, sonra AI planını oluştur
                   </p>
                   <button className="btn btn-primary" onClick={() => handleGenerate(false)} disabled={genLoad}>

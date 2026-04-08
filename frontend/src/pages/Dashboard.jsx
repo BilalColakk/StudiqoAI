@@ -406,10 +406,10 @@ export default function Dashboard() {
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
                       <div>
-                        <div style={{ fontSize: 12, color: '#8892AA', marginBottom: 6 }}>
+                        <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>
                           Aktif Oturum
                         </div>
-                        <div style={{ fontSize: 22, fontWeight: 800, color: '#F0F4FF', marginBottom: 6 }}>
+                        <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
                           {activeSession.courseName}
                         </div>
                         <div style={{ fontSize: 34, fontWeight: 800, color: sessionFinished ? '#22C55E' : '#6C63FF', fontFamily: "'Space Grotesk', sans-serif" }}>
@@ -459,7 +459,7 @@ export default function Dashboard() {
                     transition={{ delay: 0.3 }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                      <h3 style={{ fontSize: 15, fontWeight: 700, color: '#F0F4FF' }}>📅 Bugünkü Program</h3>
+                      <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>📅 Bugünkü Program</h3>
                       <button className="btn btn-sm btn-secondary" onClick={() => navigate('/study-plan')}>
                         Tümü <ArrowRight size={12} />
                       </button>
@@ -468,7 +468,7 @@ export default function Dashboard() {
                     {studyEntries.length === 0 ? (
                       <div className="empty-state" style={{ padding: '30px 0' }}>
                         <div style={{ fontSize: 36 }}>☀️</div>
-                        <p style={{ color: '#8892AA', fontSize: 13 }}>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
                           {plan ? 'Bugün için çalışma yok' : 'Henüz plan oluşturulmadı'}
                         </p>
                       </div>
@@ -504,15 +504,15 @@ export default function Dashboard() {
                               }} />
 
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F4FF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                   {e.course_name}
                                 </div>
-                                <div style={{ fontSize: 11, color: '#8892AA' }}>
+                                <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
                                   {e.start_time} – {e.end_time}
                                 </div>
                               </div>
 
-                              <span style={{ fontSize: 11, color: '#8892AA', flexShrink: 0 }}>
+                              <span style={{ fontSize: 11, color: 'var(--text-secondary)', flexShrink: 0 }}>
                                 {isThisActive ? formatSeconds(activeSession.remainingSeconds) : `${e.duration_minutes}dk`}
                               </span>
 
@@ -574,11 +574,11 @@ export default function Dashboard() {
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.35 }}
                   >
-                    <h3 style={{ fontSize: 15, fontWeight: 700, color: '#F0F4FF', marginBottom: 20 }}>📊 Genel İlerleme</h3>
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 20 }}>📊 Genel İlerleme</h3>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 24 }}>
                       <ProgressRing percent={progress?.completion_rate_percent ?? 0} />
                       <div>
-                        <div style={{ fontSize: 13, color: '#8892AA', marginBottom: 12 }}>Bu haftanın istatistikleri</div>
+                        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>Bu haftanın istatistikleri</div>
                         {[
                           { label: 'Tamamlandı', val: progress?.completed_entries ?? 0, color: '#22C55E' },
                           { label: 'Atlandı', val: progress?.skipped_entries ?? 0, color: '#EF4444' },
@@ -586,8 +586,8 @@ export default function Dashboard() {
                         ].map(s => (
                           <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                             <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, boxShadow: `0 0 6px ${s.color}` }} />
-                            <span style={{ fontSize: 12, color: '#8892AA' }}>{s.label}</span>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: '#F0F4FF', marginLeft: 'auto' }}>{s.val}</span>
+                            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{s.label}</span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginLeft: 'auto' }}>{s.val}</span>
                           </div>
                         ))}
                       </div>
@@ -595,7 +595,7 @@ export default function Dashboard() {
 
                     {chartData.length > 0 && (
                       <>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F4FF', marginBottom: 12 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>
                           <TrendingUp size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
                           Ders Bazlı Çalışma (saat)
                         </div>

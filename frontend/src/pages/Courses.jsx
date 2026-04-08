@@ -70,7 +70,7 @@ function CourseCard({ course, onDelete, onEdit }) {
         </AnimatePresence>
       </div>
 
-      <h3 style={{ fontSize: 15, fontWeight: 700, color: '#F0F4FF', marginBottom: 6, lineHeight: 1.3 }}>
+      <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6, lineHeight: 1.3 }}>
         {course.course_name}
       </h3>
 
@@ -154,7 +154,7 @@ export default function Courses() {
   return (
     <>
       <Toaster position="top-right" toastOptions={{
-        style: { background: '#0D1117', color: '#F0F4FF', border: '1px solid rgba(255,255,255,0.08)' }
+        style: { background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
       }} />
 
       <div className="glow-orb" style={{ width: 400, height: 400, background: '#6C63FF', top: -150, right: 0, opacity: 0.07 }} />
@@ -181,8 +181,8 @@ export default function Courses() {
               courses.length === 0 ? (
                 <div className="empty-state">
                   <div className="empty-icon">📚</div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#F0F4FF' }}>Henüz ders eklenmedi</h3>
-                  <p style={{ color: '#8892AA', fontSize: 14 }}>İlk dersini ekleyerek çalışma planını oluşturmaya başla</p>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>Henüz ders eklenmedi</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>İlk dersini ekleyerek çalışma planını oluşturmaya başla</p>
                   <button className="btn btn-primary" onClick={openAdd}><Plus size={16} /> İlk Dersi Ekle</button>
                 </div>
               ) : (
@@ -213,7 +213,7 @@ export default function Courses() {
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: '#F0F4FF' }}>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>
                   {editCourse ? 'Dersi Düzenle' : 'Yeni Ders Ekle'}
                 </h2>
                 <button className="btn-icon btn" onClick={() => setShowForm(false)}><X size={16} /></button>

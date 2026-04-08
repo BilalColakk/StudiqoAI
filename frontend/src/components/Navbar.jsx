@@ -50,11 +50,11 @@ export default function Navbar() {
           <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 15, color: 'var(--text-primary)', lineHeight: 1.1 }}>
             Studiqo
           </div>
-          <div style={{ fontSize: 10, color: '#8892AA', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 10, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
             Study Planner
           </div>
         </div>
-        <button className="mobile-only" onClick={() => setIsOpen(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#8892AA' }}>
+        <button className="mobile-only" onClick={() => setIsOpen(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--text-secondary)' }}>
           <X size={24} />
         </button>
         {/* Desktop Theme Toggle */}
@@ -62,9 +62,9 @@ export default function Navbar() {
           className="desktop-only" 
           onClick={toggleTheme}
           style={{ 
-            marginLeft: 'auto', background: 'rgba(255,255,255,0.05)', 
-            border: '1px solid rgba(255,255,255,0.1)', 
-            color: '#F0F4FF', width: 32, height: 32, 
+            marginLeft: 'auto', background: 'var(--bg-card)', 
+            border: '1px solid var(--border)', 
+            color: 'var(--text-primary)', width: 32, height: 32, 
             borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer'
           }}
@@ -88,7 +88,7 @@ export default function Navbar() {
                   borderRadius: 10,
                   background: active ? 'rgba(108,99,255,0.15)' : 'transparent',
                   border: active ? '1px solid rgba(108,99,255,0.3)' : '1px solid transparent',
-                  color: active ? '#6C63FF' : '#8892AA',
+                  color: active ? 'var(--accent-1)' : 'var(--text-secondary)',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   position: 'relative',
@@ -134,7 +134,7 @@ export default function Navbar() {
             <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {email}
             </div>
-            <div style={{ fontSize: 10, color: '#8892AA' }}>Profil Ayarları</div>
+            <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>Profil Ayarları</div>
           </div>
         </div>
 
@@ -165,20 +165,20 @@ export default function Navbar() {
       {/* Mobile Header Bar */}
       <div className="mobile-header" style={{ 
         position: 'fixed', top: 0, left: 0, right: 0, height: 60,
-        background: 'rgba(13,17,23,0.9)', backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        background: 'var(--bg-surface)', backdropFilter: 'blur(10px)',
+        borderBottom: '1px solid var(--border)',
         display: 'none', alignItems: 'center', padding: '0 20px',
         zIndex: 90
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Brain size={24} color="#6C63FF" />
-          <span style={{ color: '#fff', fontWeight: 700, fontSize: 18 }}>Studiqo</span>
+          <Brain size={24} color="var(--accent-1)" />
+          <span style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: 18 }}>Studiqo</span>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
-          <button onClick={toggleTheme} style={{ background: 'none', border: 'none', color: '#fff' }}>
+          <button onClick={toggleTheme} style={{ background: 'none', border: 'none', color: 'var(--text-primary)' }}>
             {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
-          <button onClick={() => setIsOpen(true)} style={{ background: 'none', border: 'none', color: '#fff' }}>
+          <button onClick={() => setIsOpen(true)} style={{ background: 'none', border: 'none', color: 'var(--text-primary)' }}>
             <Menu size={24} />
           </button>
         </div>
@@ -216,8 +216,9 @@ export default function Navbar() {
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               style={{
                 position: 'fixed', top: 0, left: 0, bottom: 0, width: 280,
-                background: '#0D1117', zIndex: 1001, padding: '24px 16px',
-                display: 'flex', flexDirection: 'column'
+                background: 'var(--bg-surface)', zIndex: 1001, padding: '24px 16px',
+                display: 'flex', flexDirection: 'column',
+                borderRight: '1px solid var(--border)'
               }}
             >
               <NavContent />

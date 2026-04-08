@@ -36,12 +36,12 @@ export default function StatCard({ icon, label, value, sub, color = '#6C63FF', d
         <div style={{
           fontSize: 32, fontWeight: 800,
           fontFamily: "'Space Grotesk', sans-serif",
-          color: '#F0F4FF', letterSpacing: '-0.02em',
+          color: 'var(--text-primary)', letterSpacing: '-0.02em',
           lineHeight: 1,
         }}>
           {value}
         </div>
-        <div style={{ fontSize: 13, color: '#8892AA', marginTop: 6, fontWeight: 500 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 6, fontWeight: 500 }}>
           {label}
         </div>
         {sub && (
