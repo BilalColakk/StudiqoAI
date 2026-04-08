@@ -266,7 +266,7 @@ export default function Dashboard() {
       return paused;
     });
   };
- Kinder
+
   const resumeSession = () => {
     setActiveSession(prev => {
       if (!prev) return null;

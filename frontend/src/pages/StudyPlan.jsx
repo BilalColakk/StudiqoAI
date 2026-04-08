@@ -192,7 +192,7 @@ export default function StudyPlan() {
       prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]
     );
   };
- Kinder
+
   useEffect(() => { loadPlan(); }, []);
 
   const loadPlan = async () => {
@@ -315,7 +315,7 @@ export default function StudyPlan() {
                       ))}
                     </div>
                   </div>
- Kinder
+
                   <motion.button className="btn btn-secondary btn-sm"
                     whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                     onClick={() => handleGenerate(false)} disabled={genLoad}>
