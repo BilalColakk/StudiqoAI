@@ -7,8 +7,15 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
+    first_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
+    phone_number = Column(String, nullable=True)
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
+    is_verified = Column(Boolean, nullable=False, default=False)
+    streak_count = Column(Integer, nullable=False, default=0)
+    last_study_date = Column(Date, nullable=True)
+    badges = Column(String, nullable=True, default="[]")  # JSON encoded list of strings
 
 
 class Course(Base):
@@ -70,3 +77,4 @@ class StudyPlanEntry(Base):
     daily_cap = Column(Integer, nullable=True)
     status = Column(String, default="pending", nullable=False)
     completed_at = Column(DateTime(timezone=True), nullable=True)
+    focus_score = Column(Float, nullable=True)
