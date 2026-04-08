@@ -1,21 +1,28 @@
+import { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, BookOpen, CalendarCheck, ClipboardList,
-  Clock, LogOut, Brain, ChevronRight
+  Clock, LogOut, Brain, ChevronRight, User, Menu, X, Sun, Moon,
+  TrendingUp
 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 const navItems = [
   { to: '/dashboard',   label: 'Dashboard',    icon: LayoutDashboard },
   { to: '/courses',     label: 'Dersler',       icon: BookOpen        },
   { to: '/exams',       label: 'Sınavlar',      icon: CalendarCheck   },
   { to: '/study-plan',  label: 'Çalışma Planı', icon: ClipboardList   },
+  { to: '/analytics',   label: 'Analiz',        icon: TrendingUp      },
   { to: '/availability',label: 'Müsaitlik',     icon: Clock           },
+  { to: '/profile',     label: 'Hesabım',       icon: User            },
 ];
 
 export default function Navbar() {
   const navigate  = useNavigate();
   const location  = useLocation();
+  const [isOpen, setIsOpen] = useState(false);
+  
   const email     = localStorage.getItem('userEmail') || 'Kullanıcı';
   const initials  = email.slice(0, 2).toUpperCase();
 
@@ -25,21 +32,8 @@ export default function Navbar() {
     navigate('/login');
   };
 
-  return (
-    <motion.aside
-      initial={{ x: -280 }}
-      animate={{ x: 0 }}
-      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-      style={{
-        position: 'fixed', top: 0, left: 0, bottom: 0,
-        width: 'var(--sidebar-w)',
-        background: 'rgba(13,17,23,0.95)',
-        borderRight: '1px solid rgba(255,255,255,0.06)',
-        backdropFilter: 'blur(20px)',
-        display: 'flex', flexDirection: 'column',
-        zIndex: 100, padding: '24px 16px',
-      }}
-    >
+  const NavContent = () => (
+    <>
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 8px', marginBottom: 36 }}>
         <div style={{
@@ -59,6 +53,10 @@ export default function Navbar() {
             Study Planner
           </div>
         </div>
+        {/* Mobile Close Button */}
+        <button className="mobile-only" onClick={() => setIsOpen(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#8892AA' }}>
+          <X size={24} />
+        </button>
       </div>
 
       {/* Nav Items */}
@@ -66,7 +64,7 @@ export default function Navbar() {
         {navItems.map(({ to, label, icon: Icon }) => {
           const active = location.pathname === to;
           return (
-            <NavLink key={to} to={to} style={{ textDecoration: 'none' }}>
+            <NavLink key={to} to={to} style={{ textDecoration: 'none' }} onClick={() => setIsOpen(false)}>
               <motion.div
                 whileHover={{ x: 3 }}
                 whileTap={{ scale: 0.97 }}
@@ -122,7 +120,7 @@ export default function Navbar() {
             <div style={{ fontSize: 12, fontWeight: 600, color: '#F0F4FF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {email}
             </div>
-            <div style={{ fontSize: 10, color: '#8892AA' }}>Aktif Plan</div>
+            <div style={{ fontSize: 10, color: '#8892AA' }}>Profil Ayarları</div>
           </div>
         </div>
 
@@ -145,6 +143,85 @@ export default function Navbar() {
           Çıkış Yap
         </motion.button>
       </div>
-    </motion.aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile Header Bar */}
+      <div className="mobile-header" style={{ 
+        position: 'fixed', top: 0, left: 0, right: 0, height: 60,
+        background: 'rgba(13,17,23,0.9)', backdropFilter: 'blur(10px)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        display: 'none', alignItems: 'center', padding: '0 20px',
+        zIndex: 90
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Brain size={24} color="#6C63FF" />
+          <span style={{ color: '#fff', fontWeight: 700, fontSize: 18 }}>Studiqo</span>
+        </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
+          <button onClick={toggleTheme} style={{ background: 'none', border: 'none', color: '#fff' }}>
+            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+          <button onClick={() => setIsOpen(true)} style={{ background: 'none', border: 'none', color: '#fff' }}>
+            <Menu size={24} />
+          </button>
+        </div>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <motion.aside
+        className="desktop-sidebar"
+        initial={{ x: -280 }}
+        animate={{ x: 0 }}
+        style={{
+          position: 'fixed', top: 0, left: 0, bottom: 0,
+          width: 'var(--sidebar-w)',
+          background: 'rgba(13,17,23,0.95)',
+          borderRight: '1px solid rgba(255,255,255,0.06)',
+          backdropFilter: 'blur(20px)',
+          display: 'flex', flexDirection: 'column',
+          zIndex: 100, padding: '24px 16px',
+        }}
+      >
+        <NavContent />
+      </motion.aside>
+
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000 }}
+            />
+            <motion.aside
+              initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              style={{
+                position: 'fixed', top: 0, left: 0, bottom: 0, width: 280,
+                background: '#0D1117', zIndex: 1001, padding: '24px 16px',
+                display: 'flex', flexDirection: 'column'
+              }}
+            >
+              <NavContent />
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .desktop-sidebar { display: none !important; }
+          .mobile-header { display: flex !important; }
+          .mobile-only { display: block !important; }
+        }
+        @media (min-width: 769px) {
+          .mobile-only { display: none !important; }
+        }
+      `}</style>
+    </>
   );
 }

@@ -12,6 +12,7 @@ import StatCard from '../components/StatCard';
 import ProgressRing from '../components/ProgressRing';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import PageTransition from '../components/PageTransition';
+import FocusOverlay from '../components/FocusOverlay';
 import {
   getCourses, getExams, getLatestPlan,
   getPlanProgress, generatePlan, regenerateAdaptive, completeEntry, skipEntry
@@ -19,6 +20,7 @@ import {
 
 const COLORS = ['#6C63FF','#00D2FF','#F59E0B','#22C55E','#EF4444','#EC4899','#8B5CF6','#14B8A6'];
 const ACTIVE_SESSION_KEY = 'activeStudySession';
+const BEEP_URL = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
 
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload?.length) {
@@ -77,6 +79,8 @@ function sendSessionFinishedNotification(courseName) {
       body: `${courseName} oturumu tamamlandı. İstersen mola ver.`,
     });
   }
+  const audio = new Audio(BEEP_URL);
+  audio.play().catch(() => {});
 }
 
 export default function Dashboard() {
@@ -90,6 +94,7 @@ export default function Dashboard() {
   const [genLoad,  setGenLoad]  = useState(false);
   const [activeSession, setActiveSession] = useState(null);
   const [sessionFinished, setSessionFinished] = useState(false);
+  const [showFocusOverlay, setShowFocusOverlay] = useState(false);
 
   useEffect(() => { loadAll(); }, []);
 
@@ -237,11 +242,13 @@ export default function Dashboard() {
       remainingSeconds: durationSeconds,
       startedAt: Date.now(),
       isRunning: true,
+      pauseCount: 0,
     };
 
     setSessionFinished(false);
     setActiveSession(session);
     persistSession(session);
+    setShowFocusOverlay(true);
     toast.success(`${entry.course_name} oturumu başladı`);
   };
 
@@ -253,12 +260,13 @@ export default function Dashboard() {
         ...prev,
         remainingSeconds: remaining,
         isRunning: false,
+        pauseCount: (prev.pauseCount || 0) + 1,
       };
       persistSession(paused);
       return paused;
     });
   };
-
+ Kinder
   const resumeSession = () => {
     setActiveSession(prev => {
       if (!prev) return null;
@@ -285,11 +293,20 @@ export default function Dashboard() {
   const markSessionCompleted = async () => {
     if (!activeSession?.entryId) return;
 
+    // Focus Score Calculation: Start 100, -5 for each pause
+    const focusScore = Math.max(0, 100 - ((activeSession.pauseCount || 0) * 5));
+
     try {
-      await completeEntry(activeSession.entryId);
-      toast.success('Oturum tamamlandı olarak işaretlendi');
+      const res = await completeEntry(activeSession.entryId, { focus_score: focusScore });
+      toast.success('Oturum tamamlandı!');
+      
+      if (res.data.new_badges?.length > 0) {
+        toast.success(`🎉 Yeni rozet kazandın: ${res.data.new_badges.join(', ')}`, { duration: 5000 });
+      }
+
       setActiveSession(null);
       setSessionFinished(false);
+      setShowFocusOverlay(false);
       persistSession(null);
       await loadAll();
     } catch {
@@ -299,7 +316,7 @@ export default function Dashboard() {
 
   const handleDirectComplete = async (id) => {
     try {
-      await completeEntry(id);
+      await completeEntry(id, { focus_score: 100 });
       toast.success('Görev tamamlandı');
       await loadAll();
     } catch {
@@ -328,6 +345,18 @@ export default function Dashboard() {
 
       <div className="app-layout">
         <Navbar />
+        <FocusOverlay 
+          isOpen={showFocusOverlay}
+          onClose={() => setShowFocusOverlay(false)}
+          courseName={activeSession?.courseName}
+          remainingTime={formatSeconds(activeSession?.remainingSeconds || 0)}
+          isRunning={activeSession?.isRunning}
+          onPause={pauseSession}
+          onResume={resumeSession}
+          onReset={stopSession}
+          onComplete={markSessionCompleted}
+          isFinished={sessionFinished}
+        />
         <main className="main-content">
           <PageTransition>
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>

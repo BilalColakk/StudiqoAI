@@ -2,32 +2,54 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import toast, { Toaster } from 'react-hot-toast';
-import { Mail, Lock, Eye, EyeOff, Brain, ArrowRight, UserPlus } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, UserPlus, ArrowRight, User, Phone } from 'lucide-react';
 import { registerUser } from '../api/endpoints';
 
 export default function Register() {
   const navigate = useNavigate();
-  const [form, setForm]       = useState({ email: '', password: '', confirm: '' });
+  const [form, setForm] = useState({ 
+    first_name: '', 
+    last_name: '', 
+    phone_number: '', 
+    email: '', 
+    password: '', 
+    confirm: '' 
+  });
   const [showPw, setShowPw]   = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Strict Email Regex
+    const emailRegex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+    if (!emailRegex.test(form.email)) {
+      toast.error('Lütfen geçerli bir e-posta adresi girin.');
+      return;
+    }
+
     if (form.password !== form.confirm) {
-      toast.error('Şifreler eşleşmiyor');
+      toast.error('Şifreler eşleşmiyor!');
       return;
     }
     if (form.password.length < 6) {
-      toast.error('Şifre en az 6 karakter olmalı');
+      toast.error('Şifre en az 6 karakter olmalı!');
       return;
     }
     setLoading(true);
     try {
-      await registerUser({ email: form.email, password: form.password });
-      toast.success('Hesap oluşturuldu! Giriş yapabilirsiniz.');
-      setTimeout(() => navigate('/login'), 800);
+      const payload = {
+        first_name: form.first_name,
+        last_name: form.last_name,
+        phone_number: form.phone_number,
+        email: form.email,
+        password: form.password
+      };
+      await registerUser(payload);
+      toast.success('Hesap oluşturuldu! Lütfen aktivasyon mailini (terminalde) kontrol et.', { duration: 5000 });
+      setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Kayıt başarısız');
+      toast.error(err.response?.data?.detail || 'Kayıt başarısız, lütfen tekrar deneyin.');
     } finally {
       setLoading(false);
     }
@@ -68,7 +90,7 @@ export default function Register() {
             <h1 style={{ color: '#fff', fontSize: 32, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, marginBottom: 12 }}>
               Yolculuğuna başla
             </h1>
-            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 15, maxWidth: 300, lineHeight: 1.7 }}>
+            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 15, maxWidth: 300, lineHeight: 1.7, margin: '0 auto' }}>
               Ücretsiz hesap oluştur ve yapay zeka destekli kişisel çalışma planına sahip ol.
             </p>
           </motion.div>
@@ -77,12 +99,13 @@ export default function Register() {
         {/* Right */}
         <div className="auth-right">
           <motion.div
-            className="auth-card"
+            className="auth-card auth-card-scroll"
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
+            style={{ maxHeight: '90vh', overflowY: 'auto' }}
           >
-            <div style={{ marginBottom: 32 }}>
+            <div style={{ marginBottom: 24 }}>
               <h2 style={{ fontSize: 28, fontWeight: 800, color: '#F0F4FF', marginBottom: 8 }}>
                 Hesap oluştur ✨
               </h2>
@@ -91,13 +114,43 @@ export default function Register() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              
+              {/* Name & Surname Row */}
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <div className="input-group" style={{ flex: 1, minWidth: 140 }}>
+                  <label className="input-label">Ad</label>
+                  <div className="input-wrapper">
+                    <User size={16} className="input-icon" />
+                    <input className="input" type="text" placeholder="Adınız"
+                      value={form.first_name} onChange={e => setForm(p => ({ ...p, first_name: e.target.value }))} required />
+                  </div>
+                </div>
+                <div className="input-group" style={{ flex: 1, minWidth: 140 }}>
+                  <label className="input-label">Soyad</label>
+                  <div className="input-wrapper">
+                    <User size={16} className="input-icon" />
+                    <input className="input" type="text" placeholder="Soyadınız"
+                      value={form.last_name} onChange={e => setForm(p => ({ ...p, last_name: e.target.value }))} required />
+                  </div>
+                </div>
+              </div>
+
               <div className="input-group">
                 <label className="input-label">E-posta</label>
                 <div className="input-wrapper">
                   <Mail size={16} className="input-icon" />
                   <input className="input" type="email" placeholder="ornek@email.com"
                     value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} required />
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Telefon Numarası (Opsiyonel)</label>
+                <div className="input-wrapper">
+                  <Phone size={16} className="input-icon" />
+                  <input className="input" type="tel" placeholder="0555 555 5555"
+                    value={form.phone_number} onChange={e => setForm(p => ({ ...p, phone_number: e.target.value }))} />
                 </div>
               </div>
 
@@ -144,7 +197,7 @@ export default function Register() {
               <motion.button
                 type="submit"
                 className="btn btn-primary"
-                style={{ width: '100%', marginTop: 4, height: 48 }}
+                style={{ width: '100%', marginTop: 12, height: 48 }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 disabled={loading}
@@ -156,7 +209,7 @@ export default function Register() {
               </motion.button>
             </form>
 
-            <div className="divider-text" style={{ marginTop: 24 }}>zaten hesabın var mı?</div>
+            <div className="divider-text" style={{ marginTop: 24 }}>Zaten hesabın var mı?</div>
             <p style={{ textAlign: 'center' }}>
               <Link to="/login" style={{ color: '#6C63FF', fontWeight: 600, textDecoration: 'none', fontSize: 14 }}>
                 Giriş yap →
@@ -165,7 +218,13 @@ export default function Register() {
           </motion.div>
         </div>
       </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        /* Scrollbar styles for the right auth card to avoid too tall popup */
+        .auth-card-scroll::-webkit-scrollbar { width: 6px; }
+        .auth-card-scroll::-webkit-scrollbar-track { background: transparent; }
+        .auth-card-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+      `}</style>
     </>
   );
 }

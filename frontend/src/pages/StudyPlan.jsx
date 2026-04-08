@@ -180,7 +180,19 @@ export default function StudyPlan() {
   const [loading,  setLoading]  = useState(true);
   const [genLoad,  setGenLoad]  = useState(false);
   const [blockH,   setBlockH]   = useState(2);
+  const [studyDays, setStudyDays] = useState([0, 1, 2, 3, 4, 5, 6]); // All days by default
 
+  const daysLabels = [
+    { id: 0, label: 'Pzt' }, { id: 1, label: 'Sal' }, { id: 2, label: 'Çar' },
+    { id: 3, label: 'Per' }, { id: 4, label: 'Cum' }, { id: 5, label: 'Cmt' }, { id: 6, label: 'Paz' }
+  ];
+
+  const toggleDay = (id) => {
+    setStudyDays(prev => 
+      prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]
+    );
+  };
+ Kinder
   useEffect(() => { loadPlan(); }, []);
 
   const loadPlan = async () => {
@@ -196,7 +208,15 @@ export default function StudyPlan() {
     setGenLoad(true);
     try {
       const fn = adaptive ? regenerateAdaptive : generatePlan;
-      await fn({ preferred_block_hours: blockH });
+      if (studyDays.length === 0) {
+        toast.error('En az bir gün seçmelisiniz!');
+        setGenLoad(false);
+        return;
+      }
+      await fn({ 
+        preferred_block_hours: blockH,
+        study_days: studyDays
+      });
       toast.success(adaptive ? '🧠 Adaptif plan oluşturuldu!' : '✅ Plan oluşturuldu!');
       await loadPlan();
     } catch (err) {
@@ -274,6 +294,28 @@ export default function StudyPlan() {
                       style={{ width: 120 }} />
                   </div>
 
+                  <div>
+                    <div style={{ fontSize: 12, color: '#8892AA', marginBottom: 6 }}>Çalışma Günleri:</div>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      {daysLabels.map(d => (
+                        <button
+                          key={d.id}
+                          onClick={() => toggleDay(d.id)}
+                          style={{
+                            width: 32, height: 32, borderRadius: 8, fontSize: 10, fontWeight: 700,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer', transition: 'all 0.2s',
+                            background: studyDays.includes(d.id) ? 'var(--accent-1)' : 'var(--bg-card)',
+                            color: studyDays.includes(d.id) ? '#fff' : 'var(--text-secondary)',
+                            border: studyDays.includes(d.id) ? '1px solid var(--accent-1)' : '1px solid var(--border)',
+                          }}
+                        >
+                          {d.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+ Kinder
                   <motion.button className="btn btn-secondary btn-sm"
                     whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                     onClick={() => handleGenerate(false)} disabled={genLoad}>

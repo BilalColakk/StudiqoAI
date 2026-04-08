@@ -22,8 +22,8 @@ export default function Login() {
       toast.success('Başarıyla giriş yapıldı!');
       setTimeout(() => navigate('/dashboard'), 600);
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Giriş başarısız';
-      toast.error(msg);
+      const msg = err.response?.data?.detail || 'Giriş başarısız. Bilgilerinizi kontrol ediniz.';
+      toast.error(msg, { duration: 4000 });
       setShake(true);
       setTimeout(() => setShake(false), 600);
     } finally {
@@ -38,7 +38,6 @@ export default function Login() {
       }} />
 
       <div className="auth-layout">
-        {/* Left Panel */}
         <div className="auth-left">
           <div className="auth-blob" style={{ width: 400, height: 400, background: '#fff', top: '-100px', left: '-100px' }} />
           <div className="auth-blob" style={{ width: 300, height: 300, background: '#00D2FF', bottom: '-50px', right: '-50px', animationDelay: '3s' }} />
@@ -61,11 +60,11 @@ export default function Login() {
             <h1 style={{ color: '#fff', fontSize: 36, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, marginBottom: 16 }}>
               Studiqo
             </h1>
-            <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 16, maxWidth: 320, lineHeight: 1.7 }}>
+            <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 16, maxWidth: 320, lineHeight: 1.7, margin: '0 auto' }}>
               Yapay zeka destekli çalışma planlarıyla sınav başarısını zirveye taşı.
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 40 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 40, alignItems: 'center' }}>
               {['Akıllı öncelik sıralaması', 'Haftalık otomatik planlama', 'Adaptif plan güncelleme'].map((f, i) => (
                 <motion.div key={f}
                   initial={{ opacity: 0, x: -20 }}
@@ -76,6 +75,7 @@ export default function Login() {
                     background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)',
                     padding: '10px 16px', borderRadius: 10,
                     border: '1px solid rgba(255,255,255,0.2)',
+                    width: 'fit-content'
                   }}
                 >
                   <Sparkles size={14} color="#fff" />
@@ -86,7 +86,6 @@ export default function Login() {
           </motion.div>
         </div>
 
-        {/* Right Panel */}
         <div className="auth-right">
           <motion.div
             className="auth-card"
@@ -125,7 +124,12 @@ export default function Login() {
               </div>
 
               <div className="input-group">
-                <label className="input-label">Şifre</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <label className="input-label" style={{ marginBottom: 0 }}>Şifre</label>
+                  <Link to="/forgot-password" style={{ fontSize: 12, color: '#00D2FF', textDecoration: 'none' }}>
+                    Şifremi unuttum
+                  </Link>
+                </div>
                 <div className="input-wrapper">
                   <Lock size={16} className="input-icon" />
                   <input
