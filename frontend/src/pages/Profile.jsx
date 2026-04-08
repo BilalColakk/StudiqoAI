@@ -98,7 +98,7 @@ export default function Profile() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="text-3xl font-bold text-white mb-2">Hesabım 👤</h1>
+            <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Hesabım 👤</h1>
             <p className="text-gray-400">Kişisel bilgilerinizi ve hesap ayarlarınızı buradan yönetebilirsiniz.</p>
           </motion.div>
         </div>
@@ -137,7 +137,7 @@ export default function Profile() {
                     return (
                       <div key={bId} title={badge?.desc} style={{
                         padding: '4px 10px', borderRadius: 20, background: 'rgba(34,197,94,0.1)', 
-                        color: 'var(--success)', fontSize: 11, fontWeight: 700, border: '1px solid rgba(34,197,94,0.2)'
+                        color: 'var(--success)', fontSize: 11, fontWeight: 700, border: '1px solid var(--border-accent)'
                       }}>
                         🏆 {badge?.name || bId}
                       </div>
@@ -153,7 +153,7 @@ export default function Profile() {
               
               {/* Personal Info Section */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                <h3 style={{ color: '#fff', fontSize: 18, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h3 style={{ color: 'var(--text-primary)', fontSize: 18, borderBottom: '1px solid var(--border)', paddingBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <User size={18} color="#6C63FF" /> Kişisel Bilgiler
                 </h3>
                 
@@ -196,7 +196,7 @@ export default function Profile() {
 
               {/* Password Section */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                <h3 style={{ color: '#fff', fontSize: 18, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h3 style={{ color: 'var(--text-primary)', fontSize: 18, borderBottom: '1px solid var(--border)', paddingBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Lock size={18} color="#6C63FF" /> Şifre Değiştir
                 </h3>
                 <p style={{ fontSize: 12, color: '#8892AA' }}>Şifrenizi değiştirmek istemiyorsanız bu alanları boş bırakabilirsiniz.</p>
