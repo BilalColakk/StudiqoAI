@@ -1,0 +1,20 @@
+def send_verification_email(email: str, token: str):
+    print("=" * 60)
+    print("E-POSTA SİMÜLASYONU (GÖNDERİLEN MAİL)")
+    print(f"Kime   : {email}")
+    print(f"Konu   : Hesabınızı Doğrulayın - Studiqo")
+    print(f"Mesaj  : Merhaba, Studiqo'ya hoş geldiniz!")
+    print(f"         Hesabınızı aktifleştirmek için lütfen aşağıdaki linke tıklayın:")
+    print(f"         http://localhost:5173/verify-email/{token}")
+    print("=" * 60)
+
+def send_password_reset_email(email: str, token: str):
+    print("=" * 60)
+    print("E-POSTA SİMÜLASYONU (GÖNDERİLEN MAİL)")
+    print(f"Kime   : {email}")
+    print(f"Konu   : Şifre Sıfırlama İsteği - Studiqo")
+    print(f"Mesaj  : Merhaba, Şifre sıfırlama talebinde bulundunuz.")
+    print(f"         Şifrenizi sıfırlamak için lütfen aşağıdaki linke tıklayın:")
+    print(f"         http://localhost:5173/reset-password/{token}")
+    print("         Eğer bu talebi siz yapmadıysanız lütfen bu e-postayı dikkate almayın.")
+    print("=" * 60)

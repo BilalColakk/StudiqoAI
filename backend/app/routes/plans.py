@@ -12,6 +12,7 @@ from ..services.planner import (
     build_course_performance_map,
     apply_adaptive_boost
 )
+from ..services.achievements import update_streak, check_and_award_badges, BADGES_LIST
 
 router = APIRouter(prefix="/plans", tags=["Plans"])
 
@@ -245,7 +246,8 @@ def generate_plan(
         prioritized_courses,
         daily_study_hours,
         availability_windows,
-        request.preferred_block_hours
+        request.preferred_block_hours,
+        study_days=request.study_days
     )
 
 
@@ -345,6 +347,7 @@ def get_latest_plan(
 @router.patch("/entries/{entry_id}/complete")
 def complete_plan_entry(
     entry_id: int,
+    request: schemas.EntryCompleteRequest,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
@@ -371,10 +374,19 @@ def complete_plan_entry(
 
     plan_entry.status = "completed"
     plan_entry.completed_at = datetime.now(timezone.utc)
+    plan_entry.focus_score = request.focus_score
+
+    # Seri ve Rozet Güncelleme
+    update_streak(db, current_user)
+    new_badges = check_and_award_badges(db, current_user, plan_entry)
 
     db.commit()
 
-    return {"message": "Entry completed"}
+    return {
+        "message": "Entry completed",
+        "new_badges": new_badges,
+        "streak_count": current_user.streak_count
+    }
 
 
 @router.patch("/entries/{entry_id}/skip")
@@ -527,7 +539,8 @@ def regenerate_adaptive_plan(
         prioritized_courses,
         daily_study_hours,
         availability_windows,
-        request.preferred_block_hours
+        request.preferred_block_hours,
+        study_days=request.study_days
     )
 
 
@@ -558,4 +571,41 @@ def regenerate_adaptive_plan(
         "availability_windows": availability_windows,
         "courses_summary": prioritized_courses,
         "weekly_plan": weekly_plan
+    }
+
+@router.get("/stats/productivity")
+def get_productivity_stats(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    # Son 30 günlük veriler
+    from datetime import timedelta
+    since = datetime.now() - timedelta(days=30)
+    
+    entries = (
+        db.query(models.StudyPlanEntry)
+        .join(models.StudyPlan)
+        .filter(
+            models.StudyPlan.user_id == current_user.id,
+            models.StudyPlanEntry.entry_date >= since.date()
+        )
+        .all()
+    )
+    
+    heatmap = {} # date: count
+    scores = [] # {date, score}
+    
+    for e in entries:
+        if e.status == "completed":
+            d_str = str(e.entry_date)
+            heatmap[d_str] = heatmap.get(d_str, 0) + 1
+            if e.focus_score is not None:
+                scores.append({"date": d_str, "score": e.focus_score})
+                
+    return {
+        "heatmap": heatmap,
+        "focus_scores": scores,
+        "streak": current_user.streak_count,
+        "badges": json.loads(current_user.badges or "[]"),
+        "all_badges_meta": BADGES_LIST
     }

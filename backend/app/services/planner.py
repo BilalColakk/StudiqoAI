@@ -372,7 +372,7 @@ def place_entries_into_windows(selected_blocks, windows):
     return entries
 
 
-def build_smart_weekly_plan(prioritized_courses, daily_study_hours, availability_windows, preferred_block_hours):
+def build_smart_weekly_plan(prioritized_courses, daily_study_hours, availability_windows, preferred_block_hours, study_days=None):
     current_date = date.today()
 
     remaining_hours = {
@@ -393,6 +393,15 @@ def build_smart_weekly_plan(prioritized_courses, daily_study_hours, availability
 
     for day_index in range(7):
         day_date = current_date + timedelta(days=day_index)
+        
+        # Gün seçimi kontrolü (0=Pazartesi, 6=Pazar)
+        if study_days is not None and day_date.weekday() not in study_days:
+            weekly_plan.append({
+                "date": str(day_date),
+                "entries": []
+            })
+            recent_days_courses.append([])
+            continue
 
         candidates = build_day_candidates(
             prioritized_courses,
