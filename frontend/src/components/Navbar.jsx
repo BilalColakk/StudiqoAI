@@ -47,7 +47,7 @@ export default function Navbar() {
           <Brain size={18} color="#fff" />
         </div>
         <div>
-          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 15, color: '#F0F4FF', lineHeight: 1.1 }}>
+          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 15, color: 'var(--text-primary)', lineHeight: 1.1 }}>
             Studiqo
           </div>
           <div style={{ fontSize: 10, color: '#8892AA', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
@@ -131,7 +131,7 @@ export default function Navbar() {
             {initials}
           </div>
           <div style={{ overflow: 'hidden' }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#F0F4FF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {email}
             </div>
             <div style={{ fontSize: 10, color: '#8892AA' }}>Profil Ayarları</div>
@@ -192,8 +192,8 @@ export default function Navbar() {
         style={{
           position: 'fixed', top: 0, left: 0, bottom: 0,
           width: 'var(--sidebar-w)',
-          background: 'rgba(13,17,23,0.95)',
-          borderRight: '1px solid rgba(255,255,255,0.06)',
+          background: 'var(--bg-surface)',
+          borderRight: '1px solid var(--border)',
           backdropFilter: 'blur(20px)',
           display: 'flex', flexDirection: 'column',
           zIndex: 100, padding: '24px 16px',
