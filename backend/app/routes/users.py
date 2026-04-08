@@ -34,18 +34,18 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
         phone_number=user.phone_number,
         email=user.email,
         password_hash=hashed,
-        is_verified=False
+        is_verified=True # Geçici olarak True
     )
 
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
-    # Generate verification token
-    verify_token = create_access_token({"sub": new_user.email, "type": "verify"})
-    send_verification_email(new_user.email, verify_token)
+    # E-posta doğrulaması geçici olarak devre dışı
+    # verify_token = create_access_token({"sub": new_user.email, "type": "verify"})
+    # send_verification_email(new_user.email, verify_token)
 
-    return {"message": "Kayıt başarılı. Lütfen e-posta adresinize gönderilen link ile hesabınızı doğrulayın."}
+    return {"message": "Kayıt başarılı. Giriş yapabilirsiniz."}
 
 @router.post("/verify-email")
 def verify_email(token: str, db: Session = Depends(get_db)):
