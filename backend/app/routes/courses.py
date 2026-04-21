@@ -69,8 +69,8 @@ def get_my_courses(
     }
 
 
-@router.put("/{course_id}/difficulty")
-def update_course_difficulty(
+@router.put("/{course_id}")
+def update_course(
     course_id: int,
     course_data: CourseUpdate,
     db: Session = Depends(get_db),
@@ -78,6 +78,9 @@ def update_course_difficulty(
 ):
     if not 1 <= course_data.difficulty <= 10:
         raise HTTPException(status_code=400, detail="Difficulty must be between 1 and 10")
+
+    if course_data.credit is not None and not 1 <= course_data.credit <= 10:
+        raise HTTPException(status_code=400, detail="Credit must be between 1 and 10")
 
     course = (
         db.query(models.Course)
@@ -92,11 +95,16 @@ def update_course_difficulty(
         raise HTTPException(status_code=404, detail="Course not found")
 
     course.difficulty = course_data.difficulty
+    if course_data.course_name is not None:
+        course.course_name = course_data.course_name
+    if course_data.credit is not None:
+        course.credit = course_data.credit
+
     db.commit()
     db.refresh(course)
 
     return {
-        "message": "Course difficulty updated successfully",
+        "message": "Course updated successfully",
         "course": {
             "id": course.id,
             "course_name": course.course_name,
@@ -124,8 +132,8 @@ def delete_course(
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    exam = db.query(models.Exam).filter(models.Exam.course_id == course.id).first()
-    if exam:
+    exams = db.query(models.Exam).filter(models.Exam.course_id == course.id).all()
+    for exam in exams:
         db.delete(exam)
 
     db.delete(course)

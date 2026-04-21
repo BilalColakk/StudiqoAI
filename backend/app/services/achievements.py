@@ -31,16 +31,46 @@ def check_and_award_badges(db: Session, user: models.User, entry: models.StudyPl
             new_badges.append("early_bird")
     except: pass
 
-    # 4. Gece Kuşu (00:00 sonrası)
+    # 4. Gece Kuşu (00:00-04:00 arası)
     try:
         start_hour = int(entry.start_time.split(":")[0])
-        if start_hour < 4 and "night_owl" not in current_badges: # 00:00-04:00
+        if start_hour < 4 and "night_owl" not in current_badges:
             new_badges.append("night_owl")
     except: pass
 
     # 5. Odak Ustası
     if (entry.focus_score or 0) >= 95 and "focus_master" not in current_badges:
         new_badges.append("focus_master")
+
+    # 6. Plan Sadığı — aktif plandaki tüm study entry'ler tamamlandı mı?
+    if "plan_loyalist" not in current_badges:
+        try:
+            latest_plan = (
+                db.query(models.StudyPlan)
+                .filter(
+                    models.StudyPlan.user_id == user.id,
+                    models.StudyPlan.is_active.is_(True)
+                )
+                .order_by(models.StudyPlan.created_at.desc())
+                .first()
+            )
+            if latest_plan:
+                all_study_entries = (
+                    db.query(models.StudyPlanEntry)
+                    .filter(
+                        models.StudyPlanEntry.study_plan_id == latest_plan.id,
+                        models.StudyPlanEntry.entry_type == "study"
+                    )
+                    .all()
+                )
+                # Şu an tamamlanan entry de dahil (DB commit öncesi — entry.id eşleşiyor)
+                completed_count = sum(
+                    1 for e in all_study_entries
+                    if e.status == "completed" or e.id == entry.id
+                )
+                if len(all_study_entries) > 0 and completed_count >= len(all_study_entries):
+                    new_badges.append("plan_loyalist")
+        except: pass
 
     if new_badges:
         current_badges.extend(new_badges)
@@ -52,13 +82,13 @@ def check_and_award_badges(db: Session, user: models.User, entry: models.StudyPl
 def update_streak(db: Session, user: models.User):
     today = date.today()
     if user.last_study_date == today:
-        return # Bugün zaten sayıldı
-    
+        return  # Bugün zaten sayıldı
+
     if user.last_study_date == today - timedelta(days=1):
         user.streak_count += 1
     else:
         # Seri bozuldu ama bugün çalışıldıysa 1'den başlar
         user.streak_count = 1
-    
+
     user.last_study_date = today
     db.commit()

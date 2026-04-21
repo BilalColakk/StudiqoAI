@@ -18,6 +18,7 @@ class UserUpdate(BaseModel):
     phone_number: Optional[str] = None
     email: Optional[EmailStr] = None
     password: Optional[str] = None
+    weekly_target_hours: Optional[int] = None
 
 class UserResponse(BaseModel):
     id: int
@@ -27,6 +28,7 @@ class UserResponse(BaseModel):
     email: EmailStr
     is_verified: bool
     streak_count: int
+    weekly_target_hours: int
     badges: List[str] = []
     
     @field_validator('badges', mode='before')
@@ -62,6 +64,8 @@ class CourseCreate(BaseModel):
 
 class CourseUpdate(BaseModel):
     difficulty: int
+    course_name: Optional[str] = None
+    credit: Optional[int] = None
 
 
 class ExamCreate(BaseModel):
@@ -76,6 +80,7 @@ class ExamUpdate(BaseModel):
 
 
 class AvailabilityCreate(BaseModel):
+    day_of_week: int
     start_time: str
     end_time: str
 
@@ -90,3 +95,4 @@ class PlanRequest(BaseModel):
 
 class EntryCompleteRequest(BaseModel):
     focus_score: float
+    notes: Optional[str] = None

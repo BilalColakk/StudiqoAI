@@ -7,22 +7,23 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-
-const navItems = [
-  { to: '/dashboard',   label: 'Dashboard',    icon: LayoutDashboard },
-  { to: '/courses',     label: 'Dersler',       icon: BookOpen        },
-  { to: '/exams',       label: 'Sınavlar',      icon: CalendarCheck   },
-  { to: '/study-plan',  label: 'Çalışma Planı', icon: ClipboardList   },
-  { to: '/analytics',   label: 'Analiz',        icon: TrendingUp      },
-  { to: '/availability',label: 'Müsaitlik',     icon: Clock           },
-  { to: '/profile',     label: 'Hesabım',       icon: User            },
-];
-
+import { useTranslation } from '../i18n';
 export default function Navbar() {
   const navigate  = useNavigate();
   const location  = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const { isDarkMode, toggleTheme } = useTheme();
+  const { t, lang, changeLanguage } = useTranslation();
+
+  const navItems = [
+    { to: '/dashboard',   label: t('NAV_DASHBOARD'),   icon: LayoutDashboard },
+    { to: '/courses',     label: t('NAV_COURSES'),     icon: BookOpen        },
+    { to: '/exams',       label: t('NAV_EXAMS'),       icon: CalendarCheck   },
+    { to: '/study-plan',  label: t('NAV_PLAN'),        icon: ClipboardList   },
+    { to: '/analytics',   label: t('NAV_ANALYTICS'),   icon: TrendingUp      },
+    { to: '/availability',label: t('NAV_AVAILABILITY'),icon: Clock           },
+    { to: '/profile',     label: 'Hesabım',            icon: User            },
+  ];
   
   const email     = localStorage.getItem('userEmail') || 'Kullanıcı';
   const initials  = email.slice(0, 2).toUpperCase();
@@ -70,6 +71,15 @@ export default function Navbar() {
           }}
         >
           {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
+        {/* Desktop Language Toggle */}
+        <button
+          className="desktop-only"
+          onClick={() => changeLanguage(lang === 'tr' ? 'en' : 'tr')}
+          style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--bg-card)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', color: 'var(--text-secondary)', fontWeight: 700, fontSize: 11, textTransform: 'uppercase' }}
+          title={lang === 'tr' ? 'Switch to English' : 'Türkçe yap'}
+        >
+          {lang}
         </button>
       </div>
 
@@ -133,7 +143,15 @@ export default function Navbar() {
           <div style={{ overflow: 'hidden' }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {email}
-            </div>
+                {/* Mobile Language Toggle */}
+                <button
+                  onClick={() => changeLanguage(lang === 'tr' ? 'en' : 'tr')}
+                  style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--bg-card)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)', fontWeight: 700, fontSize: 11, textTransform: 'uppercase' }}
+                  title={lang === 'tr' ? 'Switch to English' : 'Türkçe yap'}
+                >
+                  {lang}
+                </button>
+              </div>
             <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>Profil Ayarları</div>
           </div>
         </div>

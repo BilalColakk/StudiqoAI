@@ -13,14 +13,16 @@ import ProgressRing from '../components/ProgressRing';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import PageTransition from '../components/PageTransition';
 import FocusOverlay from '../components/FocusOverlay';
+import OnboardingWizard from '../components/OnboardingWizard';
 import {
   getCourses, getExams, getLatestPlan,
-  getPlanProgress, generatePlan, regenerateAdaptive, completeEntry, skipEntry
+  getPlanProgress, generatePlan, regenerateAdaptive, completeEntry, skipEntry,
+  getProductivityStats
 } from '../api/endpoints';
 
 const COLORS = ['#6C63FF','#00D2FF','#F59E0B','#22C55E','#EF4444','#EC4899','#8B5CF6','#14B8A6'];
 const ACTIVE_SESSION_KEY = 'activeStudySession';
-const BEEP_URL = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
+const BEEP_URL = '/beep.mp3';
 
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload?.length) {
@@ -90,11 +92,18 @@ export default function Dashboard() {
   const [exams,    setExams]    = useState([]);
   const [plan,     setPlan]     = useState(null);
   const [progress, setProgress] = useState(null);
+  const [stats,    setStats]    = useState(null);
   const [loading,  setLoading]  = useState(true);
   const [genLoad,  setGenLoad]  = useState(false);
   const [activeSession, setActiveSession] = useState(null);
   const [sessionFinished, setSessionFinished] = useState(false);
   const [showFocusOverlay, setShowFocusOverlay] = useState(false);
+  
+  const [reviewEntryId, setReviewEntryId] = useState(null);
+  const [sessionNotes, setSessionNotes] = useState('');
+
+  // preferred_block_hours — localStorage'dan oku, StudyPlan ile senkron
+  const blockH = parseInt(localStorage.getItem('preferredBlockHours') || '2', 10);
 
   useEffect(() => { loadAll(); }, []);
 
@@ -158,12 +167,13 @@ export default function Dashboard() {
   const loadAll = async () => {
     setLoading(true);
     try {
-      const [cRes, eRes, prRes] = await Promise.allSettled([
-        getCourses(), getExams(), getPlanProgress()
+      const [cRes, eRes, prRes, stRes] = await Promise.allSettled([
+        getCourses(), getExams(), getPlanProgress(), getProductivityStats()
       ]);
       if (cRes.status === 'fulfilled') setCourses(cRes.value.data.courses || []);
       if (eRes.status === 'fulfilled') setExams(eRes.value.data.exams  || []);
       if (prRes.status === 'fulfilled') setProgress(prRes.value.data);
+      if (stRes.status === 'fulfilled') setStats(stRes.value.data);
 
       try {
         const pRes = await getLatestPlan();
@@ -180,7 +190,7 @@ export default function Dashboard() {
     setGenLoad(true);
     try {
       const fn = adaptive ? regenerateAdaptive : generatePlan;
-      await fn({ preferred_block_hours: 2 });
+      await fn({ preferred_block_hours: blockH });
       toast.success(adaptive ? 'Adaptif plan oluşturuldu!' : 'Plan oluşturuldu!');
       await loadAll();
     } catch (err) {
@@ -215,6 +225,12 @@ export default function Dashboard() {
     .filter(e => e.exam_date && new Date(e.exam_date) >= new Date())
     .sort((a, b) => new Date(a.exam_date) - new Date(b.exam_date))
     .slice(0, 3);
+
+  const veryCloseExams = upcomingExams.filter(e => {
+    const diffTime = Math.abs(new Date(e.exam_date) - new Date());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 3;
+  });
 
   const activeEntryId = activeSession?.entryId ?? null;
 
@@ -290,37 +306,44 @@ export default function Dashboard() {
     toast('Oturum sıfırlandı');
   };
 
-  const markSessionCompleted = async () => {
+  const markSessionCompleted = () => {
     if (!activeSession?.entryId) return;
+    setReviewEntryId(activeSession.entryId);
+    setSessionNotes('');
+    setShowFocusOverlay(false);
+  };
 
-    // Focus Score Calculation: Start 100, -5 for each pause
-    const focusScore = Math.max(0, 100 - ((activeSession.pauseCount || 0) * 5));
+  const handleDirectComplete = (id) => {
+    setReviewEntryId(id);
+    setSessionNotes('');
+  };
+
+  const submitSessionReview = async () => {
+    if (!reviewEntryId) return;
+
+    let focusScore = 100;
+    if (activeSession && activeSession.entryId === reviewEntryId) {
+      focusScore = Math.max(0, 100 - ((activeSession.pauseCount || 0) * 5));
+    }
 
     try {
-      const res = await completeEntry(activeSession.entryId, { focus_score: focusScore });
+      const res = await completeEntry(reviewEntryId, { focus_score: focusScore, notes: sessionNotes });
       toast.success('Oturum tamamlandı!');
       
       if (res.data.new_badges?.length > 0) {
         toast.success(`🎉 Yeni rozet kazandın: ${res.data.new_badges.join(', ')}`, { duration: 5000 });
       }
 
-      setActiveSession(null);
-      setSessionFinished(false);
-      setShowFocusOverlay(false);
-      persistSession(null);
+      if (activeSession?.entryId === reviewEntryId) {
+        setActiveSession(null);
+        setSessionFinished(false);
+        persistSession(null);
+      }
+
+      setReviewEntryId(null);
       await loadAll();
     } catch {
       toast.error('Oturum tamamlanamadı');
-    }
-  };
-
-  const handleDirectComplete = async (id) => {
-    try {
-      await completeEntry(id, { focus_score: 100 });
-      toast.success('Görev tamamlandı');
-      await loadAll();
-    } catch {
-      toast.error('İşlem başarısız');
     }
   };
 
@@ -350,6 +373,8 @@ export default function Dashboard() {
           onClose={() => setShowFocusOverlay(false)}
           courseName={activeSession?.courseName}
           remainingTime={formatSeconds(activeSession?.remainingSeconds || 0)}
+          totalSeconds={activeSession?.durationSeconds || 0}
+          remainingSeconds={activeSession?.remainingSeconds || 0}
           isRunning={activeSession?.isRunning}
           onPause={pauseSession}
           onResume={resumeSession}
@@ -388,13 +413,61 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {loading ? <LoadingSkeleton rows={4} height={100} /> : (
+            {loading ? <LoadingSkeleton rows={4} height={100} /> : courses.length === 0 ? (
+              <OnboardingWizard onComplete={loadAll} />
+            ) : (
               <>
+                {/* Sınav Hatırlatıcısı (Task 24) */}
+                {veryCloseExams.length > 0 && (
+                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                    style={{ 
+                      background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.3)', 
+                      borderRadius: 14, padding: '14px 20px', marginBottom: 24, 
+                      display: 'flex', alignItems: 'center', gap: 14, color: 'var(--text-primary)'
+                    }}>
+                    <div style={{ color: '#EC4899', flexShrink: 0 }}><CalendarCheck size={28} /></div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: '#EC4899' }}>Sınavlar Yaklaşıyor! 🚨</div>
+                      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                        {veryCloseExams.map(ex => {
+                          const courseName = courses.find(c => c.id === ex.course_id)?.course_name || 'Bilinmeyen Ders';
+                          return `${courseName} sınavına çok az kaldı!`;
+                        }).join(" • ")}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
                 <div className="grid-4" style={{ marginBottom: 28 }}>
                   <StatCard icon={<BookOpen size={20} />} label="Toplam Ders" value={courses.length} color="#6C63FF" delay={0} sub="aktif dersler" />
                   <StatCard icon={<CalendarCheck size={20} />} label="Yaklaşan Sınav" value={upcomingExams.length} color="#F59E0B" delay={0.08} sub="bu dönem" />
                   <StatCard icon={<CheckCircle size={20} />} label="Tamamlanma" value={`${progress?.completion_rate_percent ?? 0}%`} color="#22C55E" delay={0.16} sub={`${progress?.completed_entries ?? 0} oturum`} />
-                  <StatCard icon={<Clock size={20} />} label="Günlük Saat" value={plan ? `${plan.daily_study_hours}s` : '—'} color="#00D2FF" delay={0.24} sub="çalışma hedefi" />
+                  
+                  {/* Streak Görselleştirmesi 7 Kutu (Task 30) */}
+                  <motion.div className="glass-card" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}
+                    style={{ padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                      <div style={{ color: 'var(--text-secondary)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Zap size={16} style={{ color: '#F59E0B' }}/> Seri (Streak)
+                      </div>
+                      <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)' }}>{stats?.streak || 0} 🔥</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {Array.from({ length: 7 }).map((_, i) => {
+                        const d = new Date();
+                        d.setDate(d.getDate() - (6 - i));
+                        const dStr = d.toISOString().split('T')[0];
+                        const count = stats?.heatmap?.[dStr] || 0;
+                        return (
+                          <div key={i} title={`${dStr}: ${count} seans`} style={{
+                            flex: 1, height: 28, borderRadius: 6,
+                            background: count > 0 ? (count > 2 ? '#F59E0B' : 'rgba(245,158,11,0.6)') : 'rgba(255,255,255,0.05)',
+                            border: count > 0 ? '1px solid rgba(245,158,11,0.8)' : '1px solid var(--border)',
+                          }} />
+                        )
+                      })}
+                    </div>
+                  </motion.div>
                 </div>
 
                 {activeSession && (
@@ -660,6 +733,44 @@ export default function Dashboard() {
           </PageTransition>
         </main>
       </div>
+
+      {/* Session Review Modal (Task 23) */}
+      {reviewEntryId && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+            style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 16, width: '100%', maxWidth: 400, border: '1px solid var(--border)' }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>Oturum Değerlendirmesi</h3>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20 }}>
+              Bu çalışmayla ilgili kendine not bırakmak ister misin?
+            </p>
+            <textarea
+              autoFocus
+              className="input"
+              style={{ minHeight: 100, marginBottom: 20, resize: 'none' }}
+              placeholder="Neler öğrendin? Nerede zorlandın?..."
+              value={sessionNotes}
+              onChange={e => setSessionNotes(e.target.value)}
+            />
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button 
+                className="btn btn-secondary" 
+                style={{ flex: 1 }} 
+                onClick={() => setReviewEntryId(null)}
+              >
+                İptal
+              </button>
+              <button 
+                className="btn btn-primary" 
+                style={{ flex: 1 }}
+                onClick={submitSessionReview}
+              >
+                Kaydet & Tamamla
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </>
   );

@@ -14,6 +14,7 @@ import StudyPlan      from './pages/StudyPlan.jsx';
 import Availability   from './pages/Availability.jsx';
 import Profile        from './pages/Profile.jsx';
 import Analytics      from './pages/Analytics.jsx';
+import { I18nProvider } from './i18n';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -22,27 +23,29 @@ function PrivateRoute({ children }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login"    element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
-        <Route path="/verify-email/:token" element={<VerifyEmail />} />
+    <I18nProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login"    element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
-        {/* Private Routes */}
-        <Route path="/dashboard"    element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-        <Route path="/courses"      element={<PrivateRoute><Courses /></PrivateRoute>} />
-        <Route path="/exams"        element={<PrivateRoute><Exams /></PrivateRoute>} />
-        <Route path="/study-plan"   element={<PrivateRoute><StudyPlan /></PrivateRoute>} />
-        <Route path="/availability" element={<PrivateRoute><Availability /></PrivateRoute>} />
-        <Route path="/profile"      element={<PrivateRoute><Profile /></PrivateRoute>} />
-        <Route path="/analytics"    element={<PrivateRoute><Analytics /></PrivateRoute>} />
+          {/* Private Routes */}
+          <Route path="/dashboard"    element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+          <Route path="/courses"      element={<PrivateRoute><Courses /></PrivateRoute>} />
+          <Route path="/exams"        element={<PrivateRoute><Exams /></PrivateRoute>} />
+          <Route path="/study-plan"   element={<PrivateRoute><StudyPlan /></PrivateRoute>} />
+          <Route path="/availability" element={<PrivateRoute><Availability /></PrivateRoute>} />
+          <Route path="/profile"      element={<PrivateRoute><Profile /></PrivateRoute>} />
+          <Route path="/analytics"    element={<PrivateRoute><Analytics /></PrivateRoute>} />
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </I18nProvider>
   );
 }

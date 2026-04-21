@@ -24,7 +24,7 @@ function getCourseColor(name) {
   return colorMap[name];
 }
 
-function EntryBlock({ entry, onComplete, onSkip }) {
+function EntryBlock({ entry, onComplete, onSkip, hiddenActions = false }) {
   const isStudy = entry.type === 'study';
   const color   = isStudy ? getCourseColor(entry.course_name) : '#4A5568';
   const statusCompleted = entry.status === 'completed';
@@ -81,7 +81,7 @@ function EntryBlock({ entry, onComplete, onSkip }) {
         </div>
       </div>
 
-      {isStudy && entry.status === 'pending' && (
+      {isStudy && entry.status === 'pending' && !hiddenActions && (
         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
           <motion.button
             className="btn btn-success btn-sm"
@@ -163,7 +163,7 @@ function DayColumn({ dayData, onComplete, onSkip }) {
                 </div>
               ) : (
                 dayData.entries.map(entry => (
-                  <EntryBlock key={entry.id} entry={entry} onComplete={onComplete} onSkip={onSkip} />
+                  <EntryBlock key={entry.id} entry={entry} onComplete={onComplete} onSkip={onSkip} hiddenActions={wasPast} />
                 ))
               )}
             </div>
@@ -179,7 +179,8 @@ export default function StudyPlan() {
   const [progress, setProgress] = useState(null);
   const [loading,  setLoading]  = useState(true);
   const [genLoad,  setGenLoad]  = useState(false);
-  const [blockH,   setBlockH]   = useState(2);
+  const [viewMode, setViewMode] = useState('list'); // list | grid
+  const [blockH,   setBlockH]   = useState(() => parseInt(localStorage.getItem('preferredBlockHours') || '2', 10));
   const [studyDays, setStudyDays] = useState([0, 1, 2, 3, 4, 5, 6]); // All days by default
 
   const daysLabels = [
@@ -226,7 +227,7 @@ export default function StudyPlan() {
 
   const handleComplete = async (id) => {
     try {
-      await completeEntry(id);
+      await completeEntry(id, { focus_score: 100 });
       toast.success('Oturum tamamlandı! 🎉');
       await loadPlan();
     } catch { toast.error('Güncellenemedi'); }
@@ -253,10 +254,33 @@ export default function StudyPlan() {
         <Navbar />
         <main className="main-content">
           <PageTransition>
-            {/* Header */}
-            <div className="page-header">
-              <h1 className="page-title">Çalışma Planım 📋</h1>
-              <p className="page-subtitle">Haftalık çalışma programı · AI tarafından oluşturuldu</p>
+            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+              <div>
+                <h1 className="page-title">Çalışma Planım 📋</h1>
+                <p className="page-subtitle">Haftalık çalışma programı · AI tarafından oluşturuldu</p>
+              </div>
+              <div style={{ display: 'flex', gap: 6, background: 'var(--bg-card)', padding: 4, borderRadius: 8, border: '1px solid var(--border)' }}>
+                <button
+                  onClick={() => setViewMode('list')}
+                  style={{
+                    padding: '6px 14px', borderRadius: 6, border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+                    background: viewMode === 'list' ? 'var(--accent-1)' : 'transparent',
+                    color: viewMode === 'list' ? '#fff' : 'var(--text-secondary)'
+                  }}
+                >
+                  Liste Yapısı
+                </button>
+                <button
+                  onClick={() => setViewMode('grid')}
+                  style={{
+                    padding: '6px 14px', borderRadius: 6, border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+                    background: viewMode === 'grid' ? 'var(--accent-1)' : 'transparent',
+                    color: viewMode === 'grid' ? '#fff' : 'var(--text-secondary)'
+                  }}
+                >
+                  Takvim Görünümü
+                </button>
+              </div>
             </div>
 
             {/* Control Bar */}
@@ -290,7 +314,11 @@ export default function StudyPlan() {
                       Blok Süresi: <strong style={{ color: 'var(--text-primary)' }}>{blockH} saat</strong>
                     </div>
                     <input type="range" className="slider" min={1} max={4}
-                      value={blockH} onChange={e => setBlockH(Number(e.target.value))}
+                      value={blockH} onChange={e => {
+                        const val = Number(e.target.value);
+                        setBlockH(val);
+                        localStorage.setItem('preferredBlockHours', String(val));
+                      }}
                       style={{ width: 120 }} />
                   </div>
 
@@ -358,17 +386,92 @@ export default function StudyPlan() {
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <AnimatePresence>
-                    {plan.weekly_plan.map((day, i) => (
-                      <motion.div key={day.date}
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                      >
-                        <DayColumn dayData={day} onComplete={handleComplete} onSkip={handleSkip} />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
+                  {viewMode === 'list' ? (
+                    <AnimatePresence>
+                      {plan.weekly_plan.map((day, i) => (
+                        <motion.div key={day.date}
+                          initial={{ opacity: 0, y: 16 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                        >
+                          <DayColumn dayData={day} onComplete={handleComplete} onSkip={handleSkip} />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  ) : (
+                    <div style={{ overflowX: 'auto', paddingBottom: 20 }}>
+                      <div style={{ minWidth: 800, background: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border)', overflow: 'hidden' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '50px repeat(7, 1fr)', borderBottom: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)' }}>
+                          <div />
+                          {plan.weekly_plan.map(d => {
+                            const dt = new Date(d.date);
+                            const isToday = dt.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
+                            return (
+                              <div key={d.date} style={{ padding: '12px 8px', textAlign: 'center', borderLeft: '1px solid var(--border)', background: isToday ? 'rgba(108,99,255,0.08)' : 'transparent' }}>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: isToday ? 'var(--accent-1)' : 'var(--text-primary)' }}>{dt.toLocaleDateString('tr-TR', { weekday: 'short' })}</div>
+                                <div style={{ fontSize: 11, color: isToday ? 'var(--accent-1)' : 'var(--text-secondary)' }}>{dt.getDate()} {dt.toLocaleDateString('tr-TR', { month: 'short' })}</div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '50px repeat(7, 1fr)', position: 'relative' }}>
+                          {/* Saat Etiketleri */}
+                          <div style={{ position: 'relative', height: 16 * 60 }}>
+                            {Array.from({ length: 16 }, (_, i) => i + 8).map((h, i) => (
+                              <div key={h} style={{ position: 'absolute', top: i * 60, width: '100%', textAlign: 'center', fontSize: 11, color: 'var(--text-secondary)', transform: 'translateY(-50%)' }}>
+                                {h}:00
+                              </div>
+                            ))}
+                          </div>
+                          
+                          {/* Gün Kolonları */}
+                          {plan.weekly_plan.map(d => {
+                            const dt = new Date(d.date);
+                            const isToday = dt.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
+                            return (
+                              <div key={d.date} style={{ position: 'relative', borderLeft: '1px solid var(--border)', height: 16 * 60, background: isToday ? 'rgba(108,99,255,0.02)' : 'transparent' }}>
+                                {/* Grid satırları */}
+                                {Array.from({ length: 16 }).map((_, i) => (
+                                  <div key={i} style={{ position: 'absolute', top: i * 60, width: '100%', height: 1, background: 'var(--border)', opacity: 0.5 }} />
+                                ))}
+                                
+                                {/* Entry blokları */}
+                                {d.entries.map(entry => {
+                                  if(!entry.start_time || !entry.end_time) return null;
+                                  const [sh, sm] = entry.start_time.split(':').map(Number);
+                                  const startMin = (sh - 8) * 60 + sm;
+                                  if (startMin < 0 || startMin > 16 * 60) return null;
+                                  
+                                  const duration = entry.duration_minutes || 60;
+                                  
+                                  const isBreak = entry.entry_type === 'break';
+                                  const rawColor = isBreak ? '#8892AA' : '#6C63FF';
+                                  const statusColor = entry.status === 'completed' ? '#22C55E' : entry.status === 'skipped' ? '#EF4444' : rawColor;
+
+                                  return (
+                                    <div key={entry.id} style={{
+                                      position: 'absolute', top: startMin, height: duration,
+                                      left: 2, right: 2, borderRadius: 6,
+                                      background: `${statusColor}1A`,
+                                      borderLeft: `3px solid ${statusColor}`,
+                                      padding: '4px 6px', overflow: 'hidden',
+                                      fontSize: 10, color: 'var(--text-primary)',
+                                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)', zIndex: 10
+                                    }} title={`${entry.course_name || 'Mola'} | ${entry.start_time} - ${entry.end_time}`}>
+                                      <div style={{ fontWeight: 700, marginBottom: 2, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                                        {entry.course_name || (isBreak ? '☕ Mola' : 'Blok')}
+                                      </div>
+                                      <div style={{ color: 'var(--text-secondary)', fontSize: 9 }}>{entry.duration_minutes}dk</div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )
             )}

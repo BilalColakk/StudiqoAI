@@ -1,0 +1,22 @@
+export default {
+  NAV_DASHBOARD: 'Dashboard',
+  NAV_COURSES: 'Courses',
+  NAV_EXAMS: 'Exams',
+  NAV_AVAILABILITY: 'Availability',
+  NAV_PLAN: 'AI Plan',
+  NAV_ANALYTICS: 'Analytics',
+  NAV_LOGOUT: 'Log Out',
+  DASH_GREETING: 'Hello',
+  DASH_SUB: 'Here is your study summary — today is a great day!',
+  BTN_NEW_PLAN: 'New Plan',
+  BTN_ADAPTIVE_PLAN: 'Adaptive Plan',
+  STAT_TOTAL_COURSES: 'Total Courses',
+  STAT_UPCOMING_EXAM: 'Upcoming Exams',
+  STAT_COMPLETION: 'Completion',
+  STAT_STREAK: 'Streak',
+  MODAL_REVIEW_TITLE: 'Session Review',
+  MODAL_REVIEW_DESC: 'Would you like to leave a note for yourself about this study session?',
+  BTN_CANCEL: 'Cancel',
+  BTN_SAVE: 'Save & Complete',
+  EXAM_ALERT: 'Exams Approaching! 🚨'
+};

@@ -12,7 +12,7 @@ export const updateMe      = (data) => api.put('/me', data);
 // Courses
 export const getCourses    = ()     => api.get('/courses/my-courses');
 export const createCourse  = (data) => api.post('/courses/', data);
-export const updateCourse  = (id, data) => api.put(`/courses/${id}/difficulty`, data);
+export const updateCourse  = (id, data) => api.put(`/courses/${id}`, data);
 export const deleteCourse  = (id)   => api.delete(`/courses/${id}`);
 
 // Exams

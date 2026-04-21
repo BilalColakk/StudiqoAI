@@ -16,6 +16,7 @@ class User(Base):
     streak_count = Column(Integer, nullable=False, default=0)
     last_study_date = Column(Date, nullable=True)
     badges = Column(String, nullable=True, default="[]")  # JSON encoded list of strings
+    weekly_target_hours = Column(Integer, nullable=False, default=10)
 
 
 class Course(Base):
@@ -42,6 +43,7 @@ class StudyAvailability(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    day_of_week = Column(Integer, nullable=False, default=0) # 0: Mon, 6: Sun
     start_time = Column(String, nullable=False)
     end_time = Column(String, nullable=False)
 
@@ -78,3 +80,4 @@ class StudyPlanEntry(Base):
     status = Column(String, default="pending", nullable=False)
     completed_at = Column(DateTime(timezone=True), nullable=True)
     focus_score = Column(Float, nullable=True)
+    notes = Column(String, nullable=True)

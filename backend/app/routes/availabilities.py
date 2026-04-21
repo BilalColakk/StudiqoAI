@@ -42,14 +42,24 @@ def set_availabilities(
         if end_m <= start_m:
             raise HTTPException(status_code=400, detail="end_time must be later than start_time")
 
-        parsed.append((window.start_time, window.end_time, start_m, end_m))
+        if window.day_of_week < 0 or window.day_of_week > 6:
+            raise HTTPException(status_code=400, detail="day_of_week must be between 0 and 6")
 
-    parsed.sort(key=lambda x: x[2])
+        parsed.append((window.day_of_week, window.start_time, window.end_time, start_m, end_m))
 
-    # overlap kontrolü
-    for i in range(len(parsed) - 1):
-        if parsed[i][3] > parsed[i + 1][2]:
-            raise HTTPException(status_code=400, detail="Availability windows cannot overlap")
+    # overlap kontrolü gün bazlı yapılmalı
+    by_day = {}
+    for p in parsed:
+        day = p[0]
+        if day not in by_day:
+            by_day[day] = []
+        by_day[day].append(p)
+    
+    for day, day_parsed in by_day.items():
+        day_parsed.sort(key=lambda x: x[3])
+        for i in range(len(day_parsed) - 1):
+            if day_parsed[i][4] > day_parsed[i + 1][3]:
+                raise HTTPException(status_code=400, detail="Availability windows cannot overlap on the same day")
 
     old_rows = (
         db.query(models.StudyAvailability)
@@ -60,10 +70,11 @@ def set_availabilities(
     for row in old_rows:
         db.delete(row)
 
-    for start_time, end_time, _, _ in parsed:
+    for day, start_time, end_time, _, _ in parsed:
         db.add(
             models.StudyAvailability(
                 user_id=current_user.id,
+                day_of_week=day,
                 start_time=start_time,
                 end_time=end_time
             )
@@ -74,7 +85,7 @@ def set_availabilities(
     return {
         "message": "Availabilities saved successfully",
         "windows": [
-            {"start_time": p[0], "end_time": p[1]}
+            {"day_of_week": p[0], "start_time": p[1], "end_time": p[2]}
             for p in parsed
         ]
     }
@@ -93,7 +104,7 @@ def get_my_availabilities(
 
     return {
         "windows": [
-            {"id": r.id, "start_time": r.start_time, "end_time": r.end_time}
+            {"id": r.id, "day_of_week": r.day_of_week, "start_time": r.start_time, "end_time": r.end_time}
             for r in rows
         ]
     }

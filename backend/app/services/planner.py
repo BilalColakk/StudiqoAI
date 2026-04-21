@@ -30,8 +30,7 @@ def calculate_priority(course, exam_date=None, exam_type="other"):
     return base_score
 
 
-def distribute_weekly_hours(prioritized_courses, daily_study_hours):
-    weekly_total_hours = daily_study_hours * 7
+def distribute_weekly_hours(prioritized_courses, weekly_total_hours):
     total_priority = sum(item["priority"] for item in prioritized_courses)
 
     if total_priority == 0:
@@ -372,7 +371,7 @@ def place_entries_into_windows(selected_blocks, windows):
     return entries
 
 
-def build_smart_weekly_plan(prioritized_courses, daily_study_hours, availability_windows, preferred_block_hours, study_days=None):
+def build_smart_weekly_plan(prioritized_courses, weekly_total_hours, availability_windows, preferred_block_hours, study_days=None):
     current_date = date.today()
 
     remaining_hours = {
@@ -383,19 +382,23 @@ def build_smart_weekly_plan(prioritized_courses, daily_study_hours, availability
     weekly_plan = []
     recent_days_courses = []
 
-    parsed_windows = [
-        {
+    windows_by_day = {i: [] for i in range(7)}
+    for w in availability_windows:
+        day_of_week = w.get("day_of_week", 0)
+        windows_by_day[day_of_week].append({
             "start": parse_time_to_minutes(w["start_time"]),
             "end": parse_time_to_minutes(w["end_time"]),
-        }
-        for w in availability_windows
-    ]
+        })
 
     for day_index in range(7):
         day_date = current_date + timedelta(days=day_index)
+        weekday = day_date.weekday()
         
-        # Gün seçimi kontrolü (0=Pazartesi, 6=Pazar)
-        if study_days is not None and day_date.weekday() not in study_days:
+        parsed_windows = windows_by_day[weekday]
+        daily_study_hours = sum((w["end"] - w["start"]) for w in parsed_windows) // 60
+
+        # Gün seçimi kontrolü (0=Pazartesi, 6=Pazar) veya o gün müsaitlik yoksa atla
+        if (study_days is not None and weekday not in study_days) or daily_study_hours == 0:
             weekly_plan.append({
                 "date": str(day_date),
                 "entries": []

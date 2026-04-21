@@ -58,12 +58,12 @@ def get_user_availability_windows(db: Session, user_id: int):
     )
 
     return [
-        {"start_time": r.start_time, "end_time": r.end_time}
+        {"day_of_week": r.day_of_week, "start_time": r.start_time, "end_time": r.end_time}
         for r in rows
     ]
 
 
-def calculate_daily_hours_from_windows(windows):
+def calculate_weekly_hours_from_windows(windows):
     total_minutes = 0
 
     for w in windows:
@@ -187,12 +187,12 @@ def generate_plan(
             detail="Please define availability windows first"
         )
 
-    daily_study_hours = calculate_daily_hours_from_windows(availability_windows)
+    weekly_total_hours = calculate_weekly_hours_from_windows(availability_windows)
 
-    if daily_study_hours < 1 or daily_study_hours > 12:
+    if weekly_total_hours < 1 or weekly_total_hours > 84:
         raise HTTPException(
             status_code=400,
-            detail="Derived daily study hours must be between 1 and 12"
+            detail="Derived weekly study hours must be between 1 and 84"
         )
 
     if request.preferred_block_hours < 1 or request.preferred_block_hours > 4:
@@ -240,12 +240,12 @@ def generate_plan(
     prioritized_courses.sort(key=lambda x: x["priority"], reverse=True)
     prioritized_courses = distribute_weekly_hours(
         prioritized_courses,
-        daily_study_hours
+        weekly_total_hours
     )
 
     weekly_plan = build_smart_weekly_plan(
         prioritized_courses,
-        daily_study_hours,
+        weekly_total_hours,
         availability_windows,
         request.preferred_block_hours,
         study_days=request.study_days
@@ -256,7 +256,7 @@ def generate_plan(
 
     new_plan = models.StudyPlan(
         user_id=current_user.id,
-        daily_study_hours=daily_study_hours,
+        daily_study_hours=weekly_total_hours // 7 if weekly_total_hours > 7 else 1,
         preferred_block_hours=request.preferred_block_hours,
         is_active=True
     )
@@ -273,7 +273,7 @@ def generate_plan(
     return {
         "message": "Plan generated successfully",
         "plan_id": new_plan.id,
-        "daily_study_hours": daily_study_hours,
+        "weekly_total_hours": weekly_total_hours,
         "preferred_block_hours": new_plan.preferred_block_hours,
         "availability_windows": availability_windows,
         "courses_summary": prioritized_courses,
@@ -376,6 +376,8 @@ def complete_plan_entry(
     plan_entry.status = "completed"
     plan_entry.completed_at = datetime.now(timezone.utc)
     plan_entry.focus_score = request.focus_score
+    if request.notes:
+        plan_entry.notes = request.notes
 
     # Seri ve Rozet Güncelleme
     update_streak(db, current_user)
@@ -473,7 +475,7 @@ def regenerate_adaptive_plan(
             detail="Please define availability windows first"
         )
 
-    daily_study_hours = calculate_daily_hours_from_windows(availability_windows)
+    weekly_total_hours = calculate_weekly_hours_from_windows(availability_windows)
 
     if request.preferred_block_hours < 1 or request.preferred_block_hours > 4:
         raise HTTPException(
@@ -533,12 +535,12 @@ def regenerate_adaptive_plan(
     prioritized_courses.sort(key=lambda x: x["priority"], reverse=True)
     prioritized_courses = distribute_weekly_hours(
         prioritized_courses,
-        daily_study_hours
+        weekly_total_hours
     )
 
     weekly_plan = build_smart_weekly_plan(
         prioritized_courses,
-        daily_study_hours,
+        weekly_total_hours,
         availability_windows,
         request.preferred_block_hours,
         study_days=request.study_days
@@ -549,7 +551,7 @@ def regenerate_adaptive_plan(
 
     new_plan = models.StudyPlan(
         user_id=current_user.id,
-        daily_study_hours=daily_study_hours,
+        daily_study_hours=weekly_total_hours // 7 if weekly_total_hours > 7 else 1, # DB daily_study_hours uyumluluğu için basit bir avg alındı (şimdilik)
         preferred_block_hours=request.preferred_block_hours,
         is_active=True
     )
@@ -567,7 +569,7 @@ def regenerate_adaptive_plan(
         "message": "Adaptive plan generated successfully",
         "plan_id": new_plan.id,
         "performance_map": performance_map,
-        "daily_study_hours": daily_study_hours,
+        "weekly_total_hours": weekly_total_hours,
         "preferred_block_hours": new_plan.preferred_block_hours,
         "availability_windows": availability_windows,
         "courses_summary": prioritized_courses,
@@ -595,6 +597,7 @@ def get_productivity_stats(
     
     heatmap = {} # date: count
     scores = [] # {date, score}
+    course_performance = {} # course_name: {completed_hours, skipped_hours, pending_hours}
     
     for e in entries:
         if e.status == "completed":
@@ -602,11 +605,32 @@ def get_productivity_stats(
             heatmap[d_str] = heatmap.get(d_str, 0) + 1
             if e.focus_score is not None:
                 scores.append({"date": d_str, "score": e.focus_score})
+
+        if e.entry_type == "study" and e.course_name:
+            if e.course_name not in course_performance:
+                course_performance[e.course_name] = {
+                    "completed_hours": 0,
+                    "skipped_hours": 0,
+                    "pending_hours": 0
+                }
+            h = e.study_hours or 0
+            if e.status == "completed":
+                course_performance[e.course_name]["completed_hours"] += h
+            elif e.status == "skipped":
+                course_performance[e.course_name]["skipped_hours"] += h
+            else:
+                course_performance[e.course_name]["pending_hours"] += h
+
+    # Round to 1 decimal
+    for c in course_performance.values():
+        for k in ("completed_hours", "skipped_hours", "pending_hours"):
+            c[k] = round(c[k], 1)
                 
     return {
         "heatmap": heatmap,
         "focus_scores": scores,
         "streak": current_user.streak_count,
         "badges": json.loads(current_user.badges or "[]"),
-        "all_badges_meta": BADGES_LIST
+        "all_badges_meta": BADGES_LIST,
+        "course_performance": course_performance
     }

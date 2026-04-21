@@ -59,6 +59,10 @@ export default function Exams() {
   };
 
   const openAdd = () => {
+    if (courses.length === 0) {
+      toast.error('Önce Dersler sayfasından en az bir ders eklemelisin.');
+      return;
+    }
     setEditExam(null);
     setForm({ course_id: courses[0]?.id || '', exam_type: 'midterm', exam_date: '' });
     setShowForm(true);

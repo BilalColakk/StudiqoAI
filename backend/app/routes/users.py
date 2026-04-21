@@ -136,6 +136,8 @@ def update_me(user_update: UserUpdate, db: Session = Depends(get_db), current_us
         current_user.email = user_update.email
     if user_update.password is not None and len(user_update.password) > 0:
         current_user.password_hash = hash_password(user_update.password)
+    if user_update.weekly_target_hours is not None:
+        current_user.weekly_target_hours = user_update.weekly_target_hours
         
     db.commit()
     db.refresh(current_user)

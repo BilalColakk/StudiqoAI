@@ -1,0 +1,22 @@
+export default {
+  NAV_DASHBOARD: 'Dashboard',
+  NAV_COURSES: 'Dersler',
+  NAV_EXAMS: 'Sınavlar',
+  NAV_AVAILABILITY: 'Müsaitlik',
+  NAV_PLAN: 'Yapay Zeka Planı',
+  NAV_ANALYTICS: 'İstatistik',
+  NAV_LOGOUT: 'Çıkış Yap',
+  DASH_GREETING: 'Merhaba',
+  DASH_SUB: 'İşte çalışma özetin — bugün harika bir gün!',
+  BTN_NEW_PLAN: 'Yeni Plan',
+  BTN_ADAPTIVE_PLAN: 'Adaptif Plan',
+  STAT_TOTAL_COURSES: 'Toplam Ders',
+  STAT_UPCOMING_EXAM: 'Yaklaşan Sınav',
+  STAT_COMPLETION: 'Tamamlanma',
+  STAT_STREAK: 'Seri (Streak)',
+  MODAL_REVIEW_TITLE: 'Oturum Değerlendirmesi',
+  MODAL_REVIEW_DESC: 'Bu çalışmayla ilgili kendine not bırakmak ister misin?',
+  BTN_CANCEL: 'İptal',
+  BTN_SAVE: 'Kaydet & Tamamla',
+  EXAM_ALERT: 'Sınavlar Yaklaşıyor! 🚨'
+};

@@ -127,7 +127,11 @@ export default function Courses() {
     setSaving(true);
     try {
       if (editCourse) {
-        await updateCourse(editCourse.id, { difficulty: form.difficulty });
+        await updateCourse(editCourse.id, {
+          difficulty: form.difficulty,
+          course_name: form.course_name,
+          credit: form.credit,
+        });
         toast.success('Ders güncellendi!');
       } else {
         await createCourse(form);
@@ -223,7 +227,7 @@ export default function Courses() {
                 <div className="input-group">
                   <label className="input-label">Ders Adı</label>
                   <input className="input" placeholder="örn. Lineer Cebir"
-                    value={form.course_name} disabled={!!editCourse}
+                    value={form.course_name}
                     onChange={e => setForm(p => ({ ...p, course_name: e.target.value }))} required />
                 </div>
 
@@ -238,17 +242,16 @@ export default function Courses() {
                   <div className="mt-8"><DifficultyBar value={form.difficulty} /></div>
                 </div>
 
-                {!editCourse && (
-                  <div className="input-group">
-                    <label className="input-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Kredi</span>
-                      <span style={{ color: '#6C63FF', fontWeight: 700 }}>{form.credit}</span>
-                    </label>
-                    <input type="range" className="slider" min={1} max={10}
-                      value={form.credit}
-                      onChange={e => setForm(p => ({ ...p, credit: Number(e.target.value) }))} />
-                  </div>
-                )}
+                {/* Kredi — hem ekle hem düzenle'de göster */}
+                <div className="input-group">
+                  <label className="input-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Kredi</span>
+                    <span style={{ color: '#6C63FF', fontWeight: 700 }}>{form.credit}</span>
+                  </label>
+                  <input type="range" className="slider" min={1} max={10}
+                    value={form.credit}
+                    onChange={e => setForm(p => ({ ...p, credit: Number(e.target.value) }))} />
+                </div>
 
                 <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
                   <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowForm(false)}>
