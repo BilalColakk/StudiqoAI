@@ -9,9 +9,8 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=flat-square&logo=postgresql)](https://postgresql.org)
 [![Vercel](https://img.shields.io/badge/Deploy-Vercel-000000?style=flat-square&logo=vercel)](https://vercel.com)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
-[🇹🇷 Türkçe](#-türkçe) · [🇺🇸 English](#-english) · [Live Demo](#-https://studiqo-ai-one.vercel.app/)
+<a href="#türkçe">🇹🇷 Türkçe</a> · <a href="#english">🇺🇸 English</a> · <a href="https://studiqo-ai-one.vercel.app/">🚀 Live Demo</a>
 
 </div>
 
@@ -66,7 +65,7 @@
 | **Frontend** | React 19, Vite 8, Framer Motion, Recharts, Lucide React |
 | **Backend** | FastAPI, Uvicorn, SQLAlchemy, Pydantic |
 | **Veritabanı** | PostgreSQL |
-| **Auth** | JWT (python-jose), Bcrypt |
+| **Auth** | Bcrypt |
 | **Deploy** | Vercel (frontend), Render (backend) |
 
 ---
@@ -187,7 +186,7 @@ studiqo/
 | **Frontend** | React 19, Vite 8, Framer Motion, Recharts, Lucide React |
 | **Backend** | FastAPI, Uvicorn, SQLAlchemy, Pydantic |
 | **Database** | PostgreSQL |
-| **Auth** | JWT (python-jose), Bcrypt |
+| **Auth** | Bcrypt |
 | **Deploy** | Vercel (frontend), Render (backend) |
 
 ---
@@ -243,16 +242,4 @@ studiqo/
         └── i18n/            # TR/EN translations
 ```
 
----
-
-## 🤝 Contributing
-
-Pull request'ler ve issue'lar memnuniyetle karşılanır.  
-Pull requests and issues are welcome.
-
----
-
-## 📄 License
-
-[MIT](LICENSE)
 
