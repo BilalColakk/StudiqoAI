@@ -46,7 +46,6 @@
 
 #### 🔐 Güvenli Kimlik Doğrulama
 - JWT tabanlı oturum yönetimi
-- Email doğrulama akışı
 - Şifre sıfırlama (token ile)
 
 #### 🎨 Kullanıcı Deneyimi
@@ -167,7 +166,6 @@ studiqo/
 
 #### 🔐 Secure Authentication
 - JWT-based session management
-- Email verification flow
 - Password reset via token
 
 #### 🎨 User Experience
