@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/Studiqo-AI%20Study%20Planner-6C63FF?style=for-the-badge&logo=brain&logoColor=white" alt="Studiqo" />
-
 # 🧠 Studiqo — AI-Powered Study Planner
 
 **Öğrenciler için yapay zeka destekli, gamified çalışma planlama platformu**  
@@ -13,7 +11,7 @@
 [![Vercel](https://img.shields.io/badge/Deploy-Vercel-000000?style=flat-square&logo=vercel)](https://vercel.com)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
-[🇹🇷 Türkçe](#-türkçe) · [🇺🇸 English](#-english) · [🚀 Live Demo](#) · [📸 Screenshots](#-ekran-görüntüleri--screenshots)
+[🇹🇷 Türkçe](#-türkçe) · [🇺🇸 English](#-english) · [Live Demo](#https://studiqo-ai-one.vercel.app/)
 
 </div>
 
