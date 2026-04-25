@@ -13,6 +13,7 @@ import Navbar from '../components/Navbar';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import PageTransition from '../components/PageTransition';
 import { getProductivityStats, getMe, updateMe } from '../api/endpoints';
+import { useTranslation } from '../i18n';
 
 const COURSE_COLORS = ['#6C63FF','#00D2FF','#F59E0B','#22C55E','#EF4444','#EC4899','#8B5CF6','#14B8A6'];
 
@@ -45,6 +46,7 @@ const CourseTooltip = ({ active, payload, label }) => {
 };
 
 export default function Analytics() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -70,7 +72,7 @@ export default function Analytics() {
         setStats(sRes.value.data);
       }
     } catch {
-      toast.error('İstatistikler yüklenemedi. Lütfen tekrar deneyin.');
+      toast.error(t('STATS_ERR'));
     } finally {
       setLoading(false);
     }
@@ -121,9 +123,9 @@ export default function Analytics() {
       await updateMe({ weekly_target_hours: targetH });
       setUser(p => ({ ...p, weekly_target_hours: targetH }));
       setEditTarget(false);
-      toast.success('Haftalık hedef güncellendi');
+      toast.success(t('GOAL_UPDATED'));
     } catch {
-      toast.error('Hedef güncellenemedi');
+      toast.error(t('GOAL_ERR'));
     }
   };
 
@@ -138,8 +140,8 @@ export default function Analytics() {
           <div className="glow-orb" style={{ width: 400, height: 400, background: '#6C63FF', top: -150, right: -100, opacity: 0.05 }} />
 
           <div className="page-header">
-            <h1 className="page-title">Verimlilik Analizi 📊</h1>
-            <p className="page-subtitle">Çalışma alışkanlıklarını ve odak performansını incele</p>
+            <h1 className="page-title">{t('ANALYTICS_TITLE')}</h1>
+            <p className="page-subtitle">{t('ANALYTICS_SUB')}</p>
           </div>
 
           {loading ? <LoadingSkeleton rows={4} height={120} /> : (
@@ -152,9 +154,9 @@ export default function Analytics() {
                       <Zap size={20} />
                     </div>
                     <div>
-                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Güncel Seri</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{t('STAT_CURRENT_STREAK')}</div>
                       <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', fontFamily: "'Space Grotesk', sans-serif" }}>
-                        {stats?.streak || 0} <span style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 400 }}>gün</span>
+                        {stats?.streak || 0} <span style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 400 }}>{t('DAYS_UNIT')}</span>
                       </div>
                     </div>
                   </div>
@@ -166,9 +168,9 @@ export default function Analytics() {
                       <Award size={20} />
                     </div>
                     <div>
-                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Kazanılan Rozetler</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{t('STAT_BADGES')}</div>
                       <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', fontFamily: "'Space Grotesk', sans-serif" }}>
-                        {stats?.badges?.length || 0} <span style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 400 }}>adet</span>
+                        {stats?.badges?.length || 0} <span style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 400 }}>{t('UNITS_PIECE')}</span>
                       </div>
                     </div>
                   </div>
@@ -182,14 +184,14 @@ export default function Analytics() {
                         <Target size={16} />
                       </div>
                       <div>
-                        <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600 }}>Haftalık Hedef</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600 }}>{t('STAT_WEEKLY_GOAL')}</div>
                         <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)' }}>
-                          {totalCompletedHours.toFixed(1)} / {user?.weekly_target_hours || 10} <span style={{ fontSize: 12, fontWeight: 400 }}>saat</span>
+                          {totalCompletedHours.toFixed(1)} / {user?.weekly_target_hours || 10} <span style={{ fontSize: 12, fontWeight: 400 }}>{t('HOURS_UNIT')}</span>
                         </div>
                       </div>
                     </div>
                     <button style={{ background: 'none', border: 'none', color: 'var(--accent-1)', fontSize: 12, cursor: 'pointer', fontWeight: 600 }} onClick={() => setEditTarget(!editTarget)}>
-                      {editTarget ? 'İptal' : 'Düzenle'}
+                      {editTarget ? t('BTN_CANCEL') : t('BTN_EDIT')}
                     </button>
                   </div>
 
@@ -197,12 +199,12 @@ export default function Analytics() {
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                       <input type="number" min="1" max="100" className="input" style={{ flex: 1, padding: '4px 10px', minHeight: 32 }}
                         value={targetH} onChange={e => setTargetH(Number(e.target.value))} />
-                      <button className="btn btn-primary btn-sm" onClick={handleUpdateTarget}>Kaydet</button>
+                      <button className="btn btn-primary btn-sm" onClick={handleUpdateTarget}>{t('BTN_SAVE_GOAL')}</button>
                     </div>
                   ) : (
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-secondary)', marginBottom: 6 }}>
-                        <span>İlerleme</span>
+                        <span>{t('PROGRESS_LABEL')}</span>
                         <span style={{ color: targetProgress >= 100 ? '#22C55E' : 'var(--text-primary)', fontWeight: 700 }}>%{targetProgress}</span>
                       </div>
                       <div style={{ height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 3, overflow: 'hidden' }}>
@@ -220,7 +222,7 @@ export default function Analytics() {
                       <Target size={20} />
                     </div>
                     <div>
-                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Ortalama Odak</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{t('STAT_AVG_FOCUS')}</div>
                       <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', fontFamily: "'Space Grotesk', sans-serif" }}>
                         {focusScores.length > 0
                           ? Math.round(focusScores.reduce((a, b) => a + b.score, 0) / focusScores.length)
@@ -235,9 +237,9 @@ export default function Analytics() {
               {!hasData ? (
                 <div className="empty-state">
                   <div className="empty-icon">📊</div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>Henüz analiz verisi yok</h3>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{t('NO_ANALYTICS')}</h3>
                   <p style={{ color: 'var(--text-secondary)', fontSize: 14, maxWidth: 320, textAlign: 'center' }}>
-                    Çalışma oturumlarını tamamladıkça burada odak skorun ve ilerleme istatistiklerin görünecek.
+                    {t('NO_ANALYTICS_SUB')}
                   </p>
                 </div>
               ) : (
@@ -266,23 +268,23 @@ export default function Analytics() {
                       })}
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 14, fontSize: 11, color: 'var(--text-muted)' }}>
-                      <span>Az</span>
+                      <span>{t('HEATMAP_LESS')}</span>
                       <div style={{ display: 'flex', gap: 4 }}>
                         {[0.06, 0.35, 0.65, 1].map(op => (
                           <div key={op} style={{ width: 12, height: 12, borderRadius: 3, background: 'var(--accent-1)', opacity: op }} />
                         ))}
                       </div>
-                      <span>Çok</span>
+                      <span>{t('HEATMAP_MORE')}</span>
                     </div>
                   </motion.div>
 
                   <div className="grid-2" style={{ marginBottom: 28 }}>
                     {/* Odak skoru trendi */}
                     <motion.div className="glass-card" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-                      <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 20, color: 'var(--text-primary)' }}>📈 Odak Skoru Trendi</h3>
+                      <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 20, color: 'var(--text-primary)' }}>{t('FOCUS_TREND')}</h3>
                       {focusScores.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-secondary)', fontSize: 13 }}>
-                          <Activity size={32} style={{ opacity: 0.3, marginBottom: 8 }} /><br />Henüz oturum tamamlanmadı
+                          <Activity size={32} style={{ opacity: 0.3, marginBottom: 8 }} /><br />{t('NO_SESSION')}
                         </div>
                       ) : (
                         <div style={{ width: '100%', height: 220 }}>
@@ -313,7 +315,7 @@ export default function Analytics() {
 
                     {/* Rozet başarımları */}
                     <motion.div className="glass-card" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-                      <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 20, color: 'var(--text-primary)' }}>🏆 Rozet Başarımları</h3>
+                      <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 20, color: 'var(--text-primary)' }}>{t('BADGE_TITLE')}</h3>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         {(stats?.all_badges_meta || []).map(badge => {
                           const isOwned = stats?.badges?.includes(badge.id);
@@ -333,7 +335,7 @@ export default function Analytics() {
                               </div>
                               {isOwned && (
                                 <div style={{ fontSize: 10, fontWeight: 700, color: '#22C55E', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 20, padding: '2px 8px', flexShrink: 0 }}>
-                                  KAZANILDI
+                                  {t('BADGE_EARNED')}
                                 </div>
                               )}
                             </div>
@@ -347,7 +349,7 @@ export default function Analytics() {
                   {coursePerf.length > 0 && (
                     <motion.div className="glass-card" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
                       <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-primary)' }}>
-                        <BookOpen size={16} style={{ color: 'var(--accent-1)' }} /> Ders Bazlı Çalışma (saat)
+                        <BookOpen size={16} style={{ color: 'var(--accent-1)' }} /> {t('COURSE_CHART')}
                       </h3>
                       <div style={{ width: '100%', height: 220 }}>
                         <ResponsiveContainer>
@@ -356,10 +358,10 @@ export default function Analytics() {
                             <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false} />
                             <YAxis tick={{ fontSize: 10, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false} />
                             <Tooltip content={<CourseTooltip />} />
-                            <Bar dataKey="completed" name="Tamamlanan" stackId="a" radius={[0, 0, 0, 0]} fill="#22C55E">
+                            <Bar dataKey="completed" name={t('COMPLETED')} stackId="a" radius={[0, 0, 0, 0]} fill="#22C55E">
                               {coursePerf.map((_, i) => <Cell key={i} fill="#22C55E" fillOpacity={0.7} />)}
                             </Bar>
-                            <Bar dataKey="skipped" name="Atlanan" stackId="a" radius={[4, 4, 0, 0]} fill="#EF4444">
+                            <Bar dataKey="skipped" name={t('SKIPPED')} stackId="a" radius={[4, 4, 0, 0]} fill="#EF4444">
                               {coursePerf.map((_, i) => <Cell key={i} fill="#EF4444" fillOpacity={0.6} />)}
                             </Bar>
                           </BarChart>
@@ -367,10 +369,10 @@ export default function Analytics() {
                       </div>
                       <div style={{ display: 'flex', gap: 20, justifyContent: 'center', marginTop: 12, fontSize: 12 }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-secondary)' }}>
-                          <div style={{ width: 10, height: 10, borderRadius: 2, background: '#22C55E', opacity: 0.7 }} /> Tamamlandı
+                          <div style={{ width: 10, height: 10, borderRadius: 2, background: '#22C55E', opacity: 0.7 }} /> {t('COMPLETED')}
                         </span>
                         <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-secondary)' }}>
-                          <div style={{ width: 10, height: 10, borderRadius: 2, background: '#EF4444', opacity: 0.6 }} /> Atlandı
+                          <div style={{ width: 10, height: 10, borderRadius: 2, background: '#EF4444', opacity: 0.6 }} /> {t('SKIPPED')}
                         </span>
                       </div>
                     </motion.div>

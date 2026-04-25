@@ -8,12 +8,13 @@ import Navbar from '../components/Navbar';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import PageTransition from '../components/PageTransition';
 import { getCourses, getExams, createExam, updateExam, deleteExam } from '../api/endpoints';
+import { useTranslation } from '../i18n';
 
 const TYPE_META = {
   quiz:    { label: 'Quiz',    color: '#3B82F6', bg: 'rgba(59,130,246,0.12)',  badgeClass: 'badge-blue'   },
-  midterm: { label: 'Vize',   color: '#F59E0B', bg: 'rgba(245,158,11,0.12)',  badgeClass: 'badge-yellow' },
+  midterm: { label: 'Midterm',color: '#F59E0B', bg: 'rgba(245,158,11,0.12)',  badgeClass: 'badge-yellow' },
   final:   { label: 'Final',  color: '#EF4444', bg: 'rgba(239,68,68,0.12)',   badgeClass: 'badge-red'    },
-  other:   { label: 'Diğer', color: '#8892AA', bg: 'rgba(136,146,170,0.12)', badgeClass: 'badge-gray'   },
+  other:   { label: 'Other',  color: '#8892AA', bg: 'rgba(136,146,170,0.12)', badgeClass: 'badge-gray'   },
 };
 
 function daysUntil(dateStr) {
@@ -24,7 +25,7 @@ function daysUntil(dateStr) {
 function CountdownChip({ days }) {
   if (days === null) return null;
   const color = days === 0 ? '#EF4444' : days <= 3 ? '#EF4444' : days <= 7 ? '#F59E0B' : '#22C55E';
-  const label = days === 0 ? 'BUGÜN!' : days === 1 ? 'Yarın' : `${days} gün`;
+  const label = days === 0 ? 'TODAY!' : days === 1 ? 'Tomorrow' : `${days} days`;
   return (
     <span style={{
       fontSize: 11, fontWeight: 700, color,
@@ -38,6 +39,7 @@ function CountdownChip({ days }) {
 }
 
 export default function Exams() {
+  const { t } = useTranslation();
   const [exams,    setExams]    = useState([]);
   const [courses,  setCourses]  = useState([]);
   const [loading,  setLoading]  = useState(true);
@@ -54,13 +56,13 @@ export default function Exams() {
       const [eRes, cRes] = await Promise.all([getExams(), getCourses()]);
       setExams(eRes.data.exams || []);
       setCourses(cRes.data.courses || []);
-    } catch { toast.error('Veriler yüklenemedi'); }
+    } catch { toast.error(t('TOAST_EXAM_ERR')); }
     finally { setLoading(false); }
   };
 
   const openAdd = () => {
     if (courses.length === 0) {
-      toast.error('Önce Dersler sayfasından en az bir ders eklemelisin.');
+      toast.error(t('NO_COURSE_WARN'));
       return;
     }
     setEditExam(null);
@@ -85,26 +87,26 @@ export default function Exams() {
       };
       if (editExam) {
         await updateExam(editExam.exam_id, payload);
-        toast.success('Sınav güncellendi!');
+        toast.success(t('TOAST_EXAM_UPD'));
       } else {
         await createExam(payload);
-        toast.success('Sınav eklendi!');
+        toast.success(t('TOAST_EXAM_ADD'));
       }
       setShowForm(false);
       await loadAll();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'İşlem başarısız');
+      toast.error(err.response?.data?.detail || t('ERROR_GENERIC'));
     } finally { setSaving(false); }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Bu sınavı silmek istiyor musun?')) return;
+    if (!confirm(t('CONFIRM_DEL_EXAM'))) return;
     try {
       await deleteExam(id);
-      toast.success('Sınav silindi');
+      toast.success(t('TOAST_EXAM_DEL'));
       setExams(p => p.filter(e => e.exam_id !== id));
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Silinemedi');
+      toast.error(err.response?.data?.detail || t('ERROR_DELETE'));
     }
   };
 
@@ -127,12 +129,12 @@ export default function Exams() {
           <PageTransition>
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
               <div>
-                <h1 className="page-title">Sınavlarım 🎯</h1>
-                <p className="page-subtitle">{upcoming.length} yaklaşan sınav · Tarihe göre sıralı</p>
+                <h1 className="page-title">{t('EXAMS_TITLE')}</h1>
+                <p className="page-subtitle">{upcoming.length} {t('EXAMS_SUB')}</p>
               </div>
               <motion.button className="btn btn-primary"
                 onClick={openAdd} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
-                <Plus size={16} /> Sınav Ekle
+                <Plus size={16} /> {t('BTN_ADD_EXAM')}
               </motion.button>
             </div>
 
@@ -155,7 +157,7 @@ export default function Exams() {
                         const days  = exam.exam_date ? daysUntil(exam.exam_date) : null;
                         const fmtDate = exam.exam_date
                           ? format(parseISO(exam.exam_date), 'dd MMMM yyyy', { locale: tr })
-                          : 'Tarih belirsiz';
+                          : t('DATE_UNKNOWN');
 
                         return (
                           <motion.div key={exam.exam_id}
@@ -240,7 +242,7 @@ export default function Exams() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                 <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>
-                  {editExam ? 'Sınavı Düzenle' : 'Yeni Sınav Ekle'}
+                  {editExam ? t('MODAL_EDIT_EXAM') : t('MODAL_ADD_EXAM')}
                 </h2>
                 <button className="btn-icon btn" onClick={() => setShowForm(false)}><X size={16} /></button>
               </div>
@@ -248,10 +250,10 @@ export default function Exams() {
               <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 {!editExam && (
                   <div className="input-group">
-                    <label className="input-label">Ders</label>
+                    <label className="input-label">{t('EXAM_COURSE')}</label>
                     <select className="input" value={form.course_id}
                       onChange={e => setForm(p => ({ ...p, course_id: e.target.value }))} required>
-                      <option value="">Ders seçin...</option>
+                      <option value="">{t('EXAM_COURSE_PH')}</option>
                       {courses.map(c => (
                         <option key={c.id} value={c.id}>{c.course_name}</option>
                       ))}
@@ -260,7 +262,7 @@ export default function Exams() {
                 )}
 
                 <div className="input-group">
-                  <label className="input-label">Sınav Tipi</label>
+                  <label className="input-label">{t('EXAM_TYPE')}</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                     {Object.entries(TYPE_META).map(([key, meta]) => (
                       <button key={key} type="button"
@@ -280,7 +282,7 @@ export default function Exams() {
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label">Sınav Tarihi (opsiyonel)</label>
+                  <label className="input-label">{t('EXAM_DATE')}</label>
                   <input className="input" type="date"
                     min={new Date().toISOString().split('T')[0]}
                     value={form.exam_date}
@@ -289,13 +291,13 @@ export default function Exams() {
 
                 <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
                   <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowForm(false)}>
-                    İptal
+                    {t('BTN_CANCEL')}
                   </button>
                   <motion.button type="submit" className="btn btn-primary" style={{ flex: 1 }}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} disabled={saving}>
                     {saving
                       ? <div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-                      : <><Check size={15} /> {editExam ? 'Güncelle' : 'Ekle'}</>
+                      : <><Check size={15} /> {editExam ? t('BTN_UPDATE') : t('BTN_ADD')}</>
                     }
                   </motion.button>
                 </div>

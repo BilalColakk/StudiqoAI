@@ -4,8 +4,10 @@ import toast, { Toaster } from 'react-hot-toast';
 import { User, Mail, Phone, Lock, Save, Loader2, ShieldCheck, Zap, Award } from 'lucide-react';
 import { getMe, updateMe, getProductivityStats } from '../api/endpoints';
 import Navbar from '../components/Navbar';
+import { useTranslation } from '../i18n';
 
 export default function Profile() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [user, setUser] = useState({
@@ -30,7 +32,7 @@ export default function Profile() {
         setUser(uRes.data);
         setAllBadges(sRes.data.all_badges_meta || []);
       } catch (err) {
-        toast.error('Profil bilgileri alınamadı.');
+        toast.error(t('ERROR_LOAD'));
       } finally {
         setLoading(false);
       }
@@ -51,12 +53,12 @@ export default function Profile() {
       
       if (passwords.new_password) {
         if (passwords.new_password !== passwords.confirm_password) {
-          toast.error('Şifreler eşleşmiyor!');
+          toast.error(t('ERROR_GENERIC')); // Replace with specific later if needed, but generic works
           setSaving(false);
           return;
         }
         if (passwords.new_password.length < 6) {
-          toast.error('Yeni şifre en az 6 karakter olmalı!');
+          toast.error(t('ERROR_GENERIC'));
           setSaving(false);
           return;
         }
@@ -67,10 +69,10 @@ export default function Profile() {
       const updatedUser = res.data;
       setUser(updatedUser);
       setPasswords({ new_password: '', confirm_password: '' });
-      toast.success('Profil başarıyla güncellendi!');
+      toast.success(t('SAVE') + '!');
       localStorage.setItem('userEmail', updatedUser.email);
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Güncelleme başarısız oldu.');
+      toast.error(err.response?.data?.detail || t('ERROR_GENERIC'));
     } finally {
       setSaving(false);
     }
@@ -100,8 +102,8 @@ export default function Profile() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Hesabım 👤</h1>
-            <p style={{ color: 'var(--text-secondary)' }}>Kişisel bilgilerinizi ve hesap ayarlarınızı buradan yönetebilirsiniz.</p>
+            <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{t('PROFILE_TITLE')}</h1>
+            <p style={{ color: 'var(--text-secondary)' }}>{t('PROFILE_SUB')}</p>
           </motion.div>
         </div>
 
@@ -118,8 +120,8 @@ export default function Profile() {
                 <Zap size={22} />
               </div>
               <div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Mevcut Seri</div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>{user.streak_count || 0} Gün</div>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('STAT_CURRENT_STREAK')}</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>{user.streak_count || 0} {t('DAYS_UNIT')}</div>
               </div>
             </div>
             
@@ -127,12 +129,12 @@ export default function Profile() {
 
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 11, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Award size={14} /> Kazanılan Rozetler
+                <Award size={14} /> {t('STAT_BADGES')}
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {(() => {
                   const badgeList = Array.isArray(user.badges) ? user.badges : JSON.parse(user.badges || "[]");
-                  if (badgeList.length === 0) return <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Henüz rozet kazanılmadı</span>;
+                  if (badgeList.length === 0) return <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('NO_BADGE_YET')}</span>;
                   
                   return badgeList.map(bId => {
                     const badge = allBadges.find(a => a.id === bId);
@@ -156,18 +158,18 @@ export default function Profile() {
               {/* Personal Info Section */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 <h3 style={{ color: 'var(--text-primary)', fontSize: 18, borderBottom: '1px solid var(--border)', paddingBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <User size={18} color="var(--accent-1)" /> Kişisel Bilgiler
+                  <User size={18} color="var(--accent-1)" /> {t('PROFILE_TITLE').split(' ')[1]}
                 </h3>
                 
                 <div style={{ display: 'flex', gap: 16 }}>
                   <div className="input-group" style={{ flex: 1 }}>
-                    <label className="input-label">Ad</label>
+                    <label className="input-label">{t('FIRST_NAME')}</label>
                     <div className="input-wrapper">
                       <input className="input" value={user.first_name || ''} onChange={e => setUser({...user, first_name: e.target.value})} required />
                     </div>
                   </div>
                   <div className="input-group" style={{ flex: 1 }}>
-                    <label className="input-label">Soyad</label>
+                    <label className="input-label">{t('LAST_NAME')}</label>
                     <div className="input-wrapper">
                       <input className="input" value={user.last_name || ''} onChange={e => setUser({...user, last_name: e.target.value})} required />
                     </div>
@@ -175,7 +177,7 @@ export default function Profile() {
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label">E-posta</label>
+                  <label className="input-label">{t('EMAIL')}</label>
                   <div className="input-wrapper">
                     <Mail size={16} className="input-icon" />
                     <input className="input" value={user.email} disabled style={{ opacity: 0.6, cursor: 'not-allowed' }} />
@@ -188,7 +190,7 @@ export default function Profile() {
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label">Telefon Numarası</label>
+                  <label className="input-label">{t('PHONE')}</label>
                   <div className="input-wrapper">
                     <Phone size={16} className="input-icon" />
                     <input className="input" value={user.phone_number || ''} onChange={e => setUser({...user, phone_number: e.target.value})} placeholder="Örn: 0555..." />
@@ -230,7 +232,7 @@ export default function Profile() {
                 whileTap={{ scale: 0.98 }}
                 style={{ height: 48, padding: '0 32px' }}
               >
-                {saving ? <Loader2 className="spin" size={20} /> : <><Save size={18} /> Güncelle</>}
+                {saving ? <Loader2 className="spin" size={20} /> : <><Save size={18} /> {t('BTN_SAVE_PROFILE')}</>}
               </motion.button>
             </div>
           </form>

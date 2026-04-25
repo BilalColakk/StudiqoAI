@@ -19,6 +19,7 @@ import {
   getPlanProgress, generatePlan, regenerateAdaptive, completeEntry, skipEntry,
   getProductivityStats
 } from '../api/endpoints';
+import { useTranslation } from '../i18n';
 
 const COLORS = ['#6C63FF','#00D2FF','#F59E0B','#22C55E','#EF4444','#EC4899','#8B5CF6','#14B8A6'];
 const ACTIVE_SESSION_KEY = 'activeStudySession';
@@ -87,6 +88,7 @@ function sendSessionFinishedNotification(courseName) {
 
 export default function Dashboard() {
   const navigate  = useNavigate();
+  const { t }     = useTranslation();
   const email     = localStorage.getItem('userEmail') || '';
   const [courses,  setCourses]  = useState([]);
   const [exams,    setExams]    = useState([]);
@@ -191,10 +193,10 @@ export default function Dashboard() {
     try {
       const fn = adaptive ? regenerateAdaptive : generatePlan;
       await fn({ preferred_block_hours: blockH });
-      toast.success(adaptive ? 'Adaptif plan oluşturuldu!' : 'Plan oluşturuldu!');
+      toast.success(adaptive ? t('PLAN_ADAPTIVE_OK') : t('PLAN_SUCCESS'));
       await loadAll();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Plan oluşturulamadı');
+      toast.error(err.response?.data?.detail || t('PLAN_ERR'));
     } finally {
       setGenLoad(false);
     }
@@ -243,7 +245,7 @@ export default function Dashboard() {
     if (!entry || entry.status !== 'pending') return;
 
     if (activeSession && activeSession.entryId !== entry.id && activeSession.remainingSeconds > 0) {
-      toast.error('Aynı anda yalnızca bir oturum başlatabilirsin.');
+      toast.error(t('SESSION_ACTIVE'));
       return;
     }
 
@@ -265,7 +267,7 @@ export default function Dashboard() {
     setActiveSession(session);
     persistSession(session);
     setShowFocusOverlay(true);
-    toast.success(`${entry.course_name} oturumu başladı`);
+    toast.success(`${entry.course_name} ${t('SESSION_STARTED')}`);
   };
 
   const pauseSession = () => {
@@ -303,7 +305,7 @@ export default function Dashboard() {
     setActiveSession(null);
     setSessionFinished(false);
     persistSession(null);
-    toast('Oturum sıfırlandı');
+    toast(t('SESSION_RESET'));
   };
 
   const markSessionCompleted = () => {
@@ -328,10 +330,10 @@ export default function Dashboard() {
 
     try {
       const res = await completeEntry(reviewEntryId, { focus_score: focusScore, notes: sessionNotes });
-      toast.success('Oturum tamamlandı!');
+      toast.success(t('BTN_COMPLETE') + '!');
       
       if (res.data.new_badges?.length > 0) {
-        toast.success(`🎉 Yeni rozet kazandın: ${res.data.new_badges.join(', ')}`, { duration: 5000 });
+        toast.success(`🎉 ${t('BADGE_TITLE').replace('🏆 ', '')}: ${res.data.new_badges.join(', ')}`, { duration: 5000 });
       }
 
       if (activeSession?.entryId === reviewEntryId) {
@@ -353,7 +355,7 @@ export default function Dashboard() {
       toast('Görev atlandı', { icon: '⏭️' });
       await loadAll();
     } catch {
-      toast.error('İşlem başarısız');
+      toast.error(t('ERROR_GENERIC'));
     }
   };
 
@@ -386,8 +388,8 @@ export default function Dashboard() {
           <PageTransition>
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
               <div>
-                <h1 className="page-title">Merhaba, {email.split('@')[0]} 👋</h1>
-                <p className="page-subtitle">İşte çalışma özetin — bugün harika bir gün!</p>
+                <h1 className="page-title">{t('DASH_GREETING')}, {email.split('@')[0]} 👋</h1>
+                <p className="page-subtitle">{t('DASH_SUB')}</p>
               </div>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <motion.button
@@ -430,8 +432,8 @@ export default function Dashboard() {
                       <div style={{ fontWeight: 700, fontSize: 14, color: '#EC4899' }}>Sınavlar Yaklaşıyor! 🚨</div>
                       <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
                         {veryCloseExams.map(ex => {
-                          const courseName = courses.find(c => c.id === ex.course_id)?.course_name || 'Bilinmeyen Ders';
-                          return `${courseName} sınavına çok az kaldı!`;
+                          const courseName = courses.find(c => c.id === ex.course_id)?.course_name || '?';
+                          return `${courseName} ${t('EXAM_ALERT').replace(' 🚨','')}`;
                         }).join(" • ")}
                       </div>
                     </div>
@@ -439,9 +441,9 @@ export default function Dashboard() {
                 )}
 
                 <div className="grid-4" style={{ marginBottom: 28 }}>
-                  <StatCard icon={<BookOpen size={20} />} label="Toplam Ders" value={courses.length} color="#6C63FF" delay={0} sub="aktif dersler" />
-                  <StatCard icon={<CalendarCheck size={20} />} label="Yaklaşan Sınav" value={upcomingExams.length} color="#F59E0B" delay={0.08} sub="bu dönem" />
-                  <StatCard icon={<CheckCircle size={20} />} label="Tamamlanma" value={`${progress?.completion_rate_percent ?? 0}%`} color="#22C55E" delay={0.16} sub={`${progress?.completed_entries ?? 0} oturum`} />
+                  <StatCard icon={<BookOpen size={20} />} label={t('STAT_COURSES')} value={courses.length} color="#6C63FF" delay={0} sub="aktif" />
+                  <StatCard icon={<CalendarCheck size={20} />} label={t('STAT_EXAM')} value={upcomingExams.length} color="#F59E0B" delay={0.08} sub="bu dönem" />
+                  <StatCard icon={<CheckCircle size={20} />} label={t('STAT_COMPLETION')} value={`${progress?.completion_rate_percent ?? 0}%`} color="#22C55E" delay={0.16} sub={`${progress?.completed_entries ?? 0} ${t('SESSIONS_UNIT')}`} />
                   
                   {/* Streak Görselleştirmesi 7 Kutu (Task 30) */}
                   <motion.div className="glass-card" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}
@@ -586,7 +588,7 @@ export default function Dashboard() {
                               </div>
 
                               <span style={{ fontSize: 11, color: 'var(--text-secondary)', flexShrink: 0 }}>
-                                {isThisActive ? formatSeconds(activeSession.remainingSeconds) : `${e.duration_minutes}dk`}
+                                {isThisActive ? formatSeconds(activeSession.remainingSeconds) : `${e.duration_minutes}${t('MIN_UNIT')}`}
                               </span>
 
                               {isPending && !isThisActive && (
@@ -597,7 +599,7 @@ export default function Dashboard() {
                                     disabled={!!activeSession && activeSession.entryId !== e.id && activeSession.remainingSeconds > 0}
                                     title="Sayacı Başlat"
                                   >
-                                    <Play size={12} /> Başla
+                                    <Play size={12} /> {t('BTN_START')}
                                   </button>
                                   <button
                                     className="btn btn-success btn-sm"
@@ -633,7 +635,7 @@ export default function Dashboard() {
                                     flexShrink: 0,
                                   }}
                                 >
-                                  Aktif
+                                  {t('ACTIVE_LABEL')}
                                 </span>
                               )}
                             </motion.div>
@@ -670,7 +672,7 @@ export default function Dashboard() {
                       <>
                         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>
                           <TrendingUp size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
-                          Ders Bazlı Çalışma (saat)
+                          {t('COURSE_HOURS')}
                         </div>
                         <ResponsiveContainer width="100%" height={160}>
                           <PieChart>
@@ -739,15 +741,15 @@ export default function Dashboard() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
             style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 16, width: '100%', maxWidth: 400, border: '1px solid var(--border)' }}>
-            <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>Oturum Değerlendirmesi</h3>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>{t('MODAL_REVIEW_TITLE')}</h3>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20 }}>
-              Bu çalışmayla ilgili kendine not bırakmak ister misin?
+              {t('MODAL_REVIEW_DESC')}
             </p>
             <textarea
               autoFocus
               className="input"
               style={{ minHeight: 100, marginBottom: 20, resize: 'none' }}
-              placeholder="Neler öğrendin? Nerede zorlandın?..."
+              placeholder={t('MODAL_REVIEW_PH')}
               value={sessionNotes}
               onChange={e => setSessionNotes(e.target.value)}
             />
@@ -757,14 +759,14 @@ export default function Dashboard() {
                 style={{ flex: 1 }} 
                 onClick={() => setReviewEntryId(null)}
               >
-                İptal
+                {t('BTN_CANCEL')}
               </button>
               <button 
                 className="btn btn-primary" 
                 style={{ flex: 1 }}
                 onClick={submitSessionReview}
               >
-                Kaydet & Tamamla
+                {t('BTN_SAVE')}
               </button>
             </div>
           </motion.div>

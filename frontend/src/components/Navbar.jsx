@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from '../i18n';
+
 export default function Navbar() {
   const navigate  = useNavigate();
   const location  = useLocation();
@@ -22,10 +23,10 @@ export default function Navbar() {
     { to: '/study-plan',  label: t('NAV_PLAN'),        icon: ClipboardList   },
     { to: '/analytics',   label: t('NAV_ANALYTICS'),   icon: TrendingUp      },
     { to: '/availability',label: t('NAV_AVAILABILITY'),icon: Clock           },
-    { to: '/profile',     label: 'Hesabım',            icon: User            },
+    { to: '/profile',     label: t('NAV_PROFILE'),     icon: User            },
   ];
   
-  const email     = localStorage.getItem('userEmail') || 'Kullanıcı';
+  const email     = localStorage.getItem('userEmail') || t('USER_GUEST');
   const initials  = email.slice(0, 2).toUpperCase();
 
   const handleLogout = () => {

@@ -15,6 +15,7 @@ import {
   getLatestPlan, getPlanProgress, generatePlan,
   regenerateAdaptive, completeEntry, skipEntry
 } from '../api/endpoints';
+import { useTranslation } from '../i18n';
 
 const COURSE_COLORS = ['#6C63FF','#00D2FF','#F59E0B','#22C55E','#EF4444','#EC4899','#8B5CF6','#14B8A6'];
 const colorMap = {};
@@ -175,6 +176,7 @@ function DayColumn({ dayData, onComplete, onSkip }) {
 }
 
 export default function StudyPlan() {
+  const { t } = useTranslation();
   const [plan,     setPlan]     = useState(null);
   const [progress, setProgress] = useState(null);
   const [loading,  setLoading]  = useState(true);
@@ -218,10 +220,10 @@ export default function StudyPlan() {
         preferred_block_hours: blockH,
         study_days: studyDays
       });
-      toast.success(adaptive ? '🧠 Adaptif plan oluşturuldu!' : '✅ Plan oluşturuldu!');
+      toast.success(adaptive ? t('PLAN_ADAPTIVE_OK') : t('PLAN_SUCCESS'));
       await loadPlan();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Plan oluşturulamadı');
+      toast.error(err.response?.data?.detail || t('PLAN_ERR'));
     } finally { setGenLoad(false); }
   };
 
@@ -256,8 +258,8 @@ export default function StudyPlan() {
           <PageTransition>
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
               <div>
-                <h1 className="page-title">Çalışma Planım 📋</h1>
-                <p className="page-subtitle">Haftalık çalışma programı · AI tarafından oluşturuldu</p>
+                <h1 className="page-title">{t('PLAN_TITLE')}</h1>
+                <p className="page-subtitle">{t('PLAN_SUB')}</p>
               </div>
               <div style={{ display: 'flex', gap: 6, background: 'var(--bg-card)', padding: 4, borderRadius: 8, border: '1px solid var(--border)' }}>
                 <button
@@ -347,7 +349,7 @@ export default function StudyPlan() {
                   <motion.button className="btn btn-secondary btn-sm"
                     whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                     onClick={() => handleGenerate(false)} disabled={genLoad}>
-                    <Play size={14} /> Yeni Plan
+                    <Play size={14} /> {t('BTN_NEW_PLAN') || 'New Plan'}
                   </motion.button>
                   <motion.button className="btn btn-primary btn-sm"
                     whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
@@ -356,7 +358,7 @@ export default function StudyPlan() {
                       ? <RefreshCw size={14} style={{ animation: 'spin 0.7s linear infinite' }} />
                       : <Zap size={14} />
                     }
-                    Adaptif Plan
+                    {t('BTN_ADAPTIVE')}
                   </motion.button>
                 </div>
               </div>
@@ -376,12 +378,12 @@ export default function StudyPlan() {
               !plan ? (
                 <div className="empty-state">
                   <div className="empty-icon">📋</div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>Henüz plan oluşturulmadı</h3>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{t('NO_PLAN')}</h3>
                   <p style={{ color: 'var(--text-secondary)', fontSize: 14, maxWidth: 320, textAlign: 'center' }}>
-                    Derslerini ve müsaitliğini ayarla, sonra AI planını oluştur
+                    {t('NO_PLAN_SUB')}
                   </p>
                   <button className="btn btn-primary" onClick={() => handleGenerate(false)} disabled={genLoad}>
-                    <Play size={16} /> Plan Oluştur
+                    <Play size={16} /> {t('BTN_GENERATE')}
                   </button>
                 </div>
               ) : (

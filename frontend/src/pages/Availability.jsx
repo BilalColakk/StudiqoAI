@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import PageTransition from '../components/PageTransition';
 import { getAvailability, setAvailability } from '../api/endpoints';
+import { useTranslation } from '../i18n';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MINUTES = ['00', '15', '30', '45'];
@@ -89,6 +90,7 @@ function WindowCard({ win, index, onDelete }) {
 }
 
 export default function Availability() {
+  const { t } = useTranslation();
   const [windows, setWindows] = useState([]);
   const [originalWindows, setOriginalWindows] = useState([]);
   const [selectedDay, setSelectedDay] = useState(0);
@@ -161,9 +163,9 @@ export default function Availability() {
     try {
       await setAvailability({ windows });
       setOriginalWindows(windows);
-      toast.success('Müsaitlik saatleri kaydedildi! ✅');
+      toast.success(t('TOAST_AVAIL_ADD') || 'Availability saved!');
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Kaydedilemedi');
+      toast.error(err.response?.data?.detail || t('ERROR_GENERIC'));
     } finally { setSaving(false); }
   };
 
@@ -182,8 +184,8 @@ export default function Availability() {
           <PageTransition>
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
               <div>
-                <h1 className="page-title">Müsaitlik Saatlerim ⏰</h1>
-                <p className="page-subtitle">AI planın gün bazlı bu saatlere göre oluşturulur</p>
+                <h1 className="page-title">{t('AVAIL_TITLE')}</h1>
+                <p className="page-subtitle">{t('AVAIL_SUB')}</p>
               </div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                 {isDirty && <span style={{ fontSize: 13, color: '#F59E0B', fontWeight: 600 }}>Kaydedilmemiş değişiklikler var</span>}
@@ -233,12 +235,12 @@ export default function Availability() {
                 {dayWindows.length === 0 ? (
                   <div className="empty-state">
                     <div className="empty-icon">⏰</div>
-                    <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>Bu güne müsaitlik eklenmedi</h3>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{t('NO_AVAIL')}</h3>
                     <p style={{ color: 'var(--text-secondary)', fontSize: 14, maxWidth: 340, textAlign: 'center' }}>
-                      Eğer boş bırakırsan planlayıcı bu güne çalışma saati atamayacaktır.
+                      {t('NO_AVAIL_SUB')}
                     </p>
                     <button className="btn btn-primary" onClick={() => { setShowAdd(true); setError(''); }}>
-                      <Plus size={16} /> İlk Pencereyi Ekle
+                      <Plus size={16} /> {t('BTN_ADD_SLOT')}
                     </button>
                   </div>
                 ) : (
@@ -272,7 +274,7 @@ export default function Availability() {
             <motion.div className="modal"
               initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>Zaman Penceresi Ekle ({DAYS[selectedDay].full})</h2>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>{t('MODAL_ADD_AVAIL')} ({DAYS[selectedDay].full})</h2>
                 <button className="btn-icon btn" onClick={() => setShowAdd(false)}><X size={16} /></button>
               </div>
 

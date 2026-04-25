@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import PageTransition from '../components/PageTransition';
 import { getCourses, createCourse, updateCourse, deleteCourse } from '../api/endpoints';
+import { useTranslation } from '../i18n';
 
 const DIFF_COLORS = ['#22C55E','#22C55E','#84CC16','#84CC16','#F59E0B','#F59E0B','#EF4444','#EF4444','#DC2626','#DC2626'];
 
@@ -92,6 +93,7 @@ function CourseCard({ course, onDelete, onEdit }) {
 }
 
 export default function Courses() {
+  const { t } = useTranslation();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -106,7 +108,7 @@ export default function Courses() {
     try {
       const res = await getCourses();
       setCourses(res.data.courses || []);
-    } catch { toast.error('Dersler yüklenemedi'); }
+    } catch { toast.error(t('TOAST_COURSE_ERR')); }
     finally { setLoading(false); }
   };
 
@@ -132,26 +134,26 @@ export default function Courses() {
           course_name: form.course_name,
           credit: form.credit,
         });
-        toast.success('Ders güncellendi!');
+        toast.success(t('TOAST_COURSE_UPD'));
       } else {
         await createCourse(form);
-        toast.success('Ders eklendi!');
+        toast.success(t('TOAST_COURSE_ADD'));
       }
       setShowForm(false);
       await load();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'İşlem başarısız');
+      toast.error(err.response?.data?.detail || t('ERROR_GENERIC'));
     } finally { setSaving(false); }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Bu dersi silmek istiyor musun?')) return;
+    if (!confirm(t('CONFIRM_DEL_COURSE'))) return;
     try {
       await deleteCourse(id);
-      toast.success('Ders silindi');
+      toast.success(t('TOAST_COURSE_DEL'));
       setCourses(p => p.filter(c => c.id !== id));
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Silinemedi');
+      toast.error(err.response?.data?.detail || t('ERROR_DELETE'));
     }
   };
 
@@ -169,15 +171,15 @@ export default function Courses() {
           <PageTransition>
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
               <div>
-                <h1 className="page-title">Derslerim 📚</h1>
-                <p className="page-subtitle">{courses.length} ders kayıtlı · Zorluk ve krediyle yönet</p>
+                <h1 className="page-title">{t('COURSES_TITLE')}</h1>
+                <p className="page-subtitle">{courses.length} {t('COURSES_SUB')}</p>
               </div>
               <motion.button
                 className="btn btn-primary"
                 onClick={openAdd}
                 whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
               >
-                <Plus size={16} /> Ders Ekle
+                <Plus size={16} /> {t('BTN_ADD_COURSE')}
               </motion.button>
             </div>
 
@@ -185,9 +187,9 @@ export default function Courses() {
               courses.length === 0 ? (
                 <div className="empty-state">
                   <div className="empty-icon">📚</div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>Henüz ders eklenmedi</h3>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>İlk dersini ekleyerek çalışma planını oluşturmaya başla</p>
-                  <button className="btn btn-primary" onClick={openAdd}><Plus size={16} /> İlk Dersi Ekle</button>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{t('NO_COURSES')}</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{t('NO_COURSES_SUB')}</p>
+                  <button className="btn btn-primary" onClick={openAdd}><Plus size={16} /> {t('BTN_FIRST_COURSE')}</button>
                 </div>
               ) : (
                 <motion.div className="grid-3" layout>
@@ -218,22 +220,22 @@ export default function Courses() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                 <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>
-                  {editCourse ? 'Dersi Düzenle' : 'Yeni Ders Ekle'}
+                  {editCourse ? t('MODAL_EDIT_COURSE') : t('MODAL_ADD_COURSE')}
                 </h2>
                 <button className="btn-icon btn" onClick={() => setShowForm(false)}><X size={16} /></button>
               </div>
 
               <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 <div className="input-group">
-                  <label className="input-label">Ders Adı</label>
-                  <input className="input" placeholder="örn. Lineer Cebir"
+                  <label className="input-label">{t('COURSE_NAME')}</label>
+                  <input className="input" placeholder={t('COURSE_NAME_PH')}
                     value={form.course_name}
                     onChange={e => setForm(p => ({ ...p, course_name: e.target.value }))} required />
                 </div>
 
                 <div className="input-group">
                   <label className="input-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Zorluk Seviyesi</span>
+                    <span>{t('DIFFICULTY')}</span>
                     <span style={{ color: DIFF_COLORS[form.difficulty - 1], fontWeight: 700 }}>{form.difficulty} / 10</span>
                   </label>
                   <input type="range" className="slider" min={1} max={10}
@@ -242,10 +244,9 @@ export default function Courses() {
                   <div className="mt-8"><DifficultyBar value={form.difficulty} /></div>
                 </div>
 
-                {/* Kredi — hem ekle hem düzenle'de göster */}
                 <div className="input-group">
                   <label className="input-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Kredi</span>
+                    <span>{t('CREDIT')}</span>
                     <span style={{ color: '#6C63FF', fontWeight: 700 }}>{form.credit}</span>
                   </label>
                   <input type="range" className="slider" min={1} max={10}
@@ -255,13 +256,13 @@ export default function Courses() {
 
                 <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
                   <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowForm(false)}>
-                    İptal
+                    {t('BTN_CANCEL')}
                   </button>
                   <motion.button type="submit" className="btn btn-primary" style={{ flex: 1 }}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} disabled={saving}>
                     {saving
                       ? <div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-                      : <><Check size={15} /> {editCourse ? 'Güncelle' : 'Ekle'}</>
+                      : <><Check size={15} /> {editCourse ? t('BTN_UPDATE') : t('BTN_ADD')}</>
                     }
                   </motion.button>
                 </div>
