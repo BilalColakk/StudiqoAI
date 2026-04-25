@@ -9,9 +9,8 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=flat-square&logo=postgresql)](https://postgresql.org)
 [![Vercel](https://img.shields.io/badge/Deploy-Vercel-000000?style=flat-square&logo=vercel)](https://vercel.com)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
-[🇹🇷 Türkçe](#-türkçe) · [🇺🇸 English](#-english) · [Live Demo](#https://studiqo-ai-one.vercel.app/)
+[🇹🇷 Türkçe](#-türkçe) · [🇺🇸 English](#-english) · [Live Demo](#-https://studiqo-ai-one.vercel.app/)
 
 </div>
 
